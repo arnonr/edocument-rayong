@@ -1,0 +1,108 @@
+export default [
+  {
+    title: "Second Page",
+    route: "second-page",
+    icon: "FileIcon",
+  },
+  {
+    title: "ข้อมูลส่วนตัว",
+    icon: "UserIcon",
+    route: "profile",
+    action: 'read',
+    resource: 'Auth',
+  },
+  {
+    title: "ระบบออกเลข",
+    icon: "FileTextIcon",
+    route: "bookout",
+    action: 'manage',
+    resource: 'Auth',
+  },
+  {
+    title: "เอกสารรับเข้า-ส่งออก",
+    icon: "FileIcon",
+    route: "bookin",
+    action: 'manage',
+    resource: 'Auth',
+  },
+  {
+    title: "รายงาน",
+    icon: "BarChartIcon",
+    route: "report",
+    action: 'manage',
+    resource: 'Auth',
+  },
+  {
+    header: 'จัดการหน่วยงานและโครงสร้างองค์กร',
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+  {
+    title: "ผู้ใช้งาน",
+    icon: "UserIcon",
+    route: "user-list",
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+  {
+    title: "หน่วยงาน",
+    icon: "BoxIcon",
+    route: "department-list",
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+
+  {
+    header: 'จัดการข้อมูลอีเมล',
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+  {
+    title: "บุคคล",
+    icon: "UsersIcon",
+    route: "email-person-list",
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+  {
+    title: "กลุ่ม",
+    icon: "LayersIcon",
+    route: "email-group-list",
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+
+  {
+    header: 'จัดการข้อมูลพื้นฐาน',
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+  {
+    title: "ประเภทเอกสารออกเลข",
+    icon: "BookmarkIcon",
+    route: "book-type-list",
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+  {
+    title: "ประเภทเอกสารรับเข้า-ส่งออก",
+    icon: "BookIcon",
+    route: "category-list",
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+  {
+    title: "สถานะเอกสาร",
+    icon: "CloudIcon",
+    route: "book-status-list",
+    action: 'manage',
+    resource: 'AdminUser',
+  },
+  // {
+  //   title: "เมลตั้งค่าระบบ",
+  //   icon: "MailIcon",
+  //   route: "setting-edit",
+  //   action: 'manage',
+  //   resource: 'AdminUser',
+  // },
+];

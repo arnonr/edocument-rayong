@@ -1,0 +1,15 @@
+composer install
+php artisan key:generate
+npm install --legacy-peer-deps
+
+./vendor/bin/sail up
+
+sudo chmod -R o+rw bootstrap/cache
+sudo chmod -R o+rw storage
+
+php artisan storage:link
+
+
+sudo crontab -e
+*/1 * * * * docker exec 2c2 /use/bin/mysqldump -u edocument --password="2022@FBA" edocument > "/var/www/html/edocument/backupDB/"`date +\%Y\%m\%d`.sql
+sudo service cron reload
