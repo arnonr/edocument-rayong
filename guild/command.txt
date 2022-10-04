@@ -9,6 +9,11 @@ sudo chmod -R o+rw storage
 
 php artisan storage:link
 
+sudo chmod -R o+rw bootstrap/cache
+sudo chmod -R o+rw storage
+
+
+sed -i 's/\r$//' ./.env
 
 sudo crontab -e
 */1 * * * * docker exec 2c2 /use/bin/mysqldump -u edocument --password="2022@FBA" edocument > "/var/www/html/edocument/backupDB/"`date +\%Y\%m\%d`.sql
