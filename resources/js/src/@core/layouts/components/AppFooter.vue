@@ -6,7 +6,7 @@
         class="ml-25"
         href="https://fba.kmutnb.ac.th/main/"
         target="_blank"
-      >คณะบริหารธุรกิจ</b-link>
+      >กองงาน วิทยาเขตระยอง</b-link>
       <span class="d-none d-sm-inline-block">, All rights Reserved</span>
     </span>
 

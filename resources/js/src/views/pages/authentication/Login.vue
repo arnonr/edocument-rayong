@@ -207,7 +207,7 @@ export default {
       username: "",
     //   sideImg: require("@/assets/images/pages/login-v2.svg"),
       sideImg: require("@/assets/images/logo/banner.jpg"),
-      logoImg: require("@/assets/images/logo/logo_main.png"),
+      logoImg: require("@/assets/images/logo/logo_main.jpeg"),
     
 
       // validation rules
