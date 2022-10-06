@@ -44,16 +44,16 @@
                         <b-col cols="12">
                             <b-form-group
                                 label="เรื่องเอกสาร"
-                                label-for="h-title"
+                                label-for="h-title1"
                                 label-cols-md="4"
                             >
                                 <validation-provider
-                                    name="title"
+                                    name="title1"
                                     rules="required"
                                     #default="{ errors }"
                                 >
                                     <b-form-input
-                                        id="h-title"
+                                        id="h-title1"
                                         placeholder="ชื่อเรื่อง..."
                                         v-model="bookInData.title"
                                     />

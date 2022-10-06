@@ -52,18 +52,26 @@ export default function useBookInAdd() {
                 let count1 = codeLastest1.toString().length;
 
                 if (count == 1) {
-                    codeLastest = "00" + codeLastest;
+                    codeLastest = "000" + codeLastest;
                 }
 
                 if (count == 2) {
+                    codeLastest = "00" + codeLastest;
+                }
+
+                if (count == 3) {
                     codeLastest = "0" + codeLastest;
                 }
 
                 if (count1 == 1) {
-                    codeLastest1 = "00" + codeLastest1;
+                    codeLastest1 = "000" + codeLastest1;
                 }
 
                 if (count1 == 2) {
+                    codeLastest1 = "00" + codeLastest1;
+                }
+
+                if (count1 == 3) {
                     codeLastest1 = "0" + codeLastest1;
                 }
 
