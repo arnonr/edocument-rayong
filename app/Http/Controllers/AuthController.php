@@ -32,29 +32,32 @@ class AuthController extends Controller
         
         $icitAccount = $this->icitAccountApi($request->username, $request->password);
         
-        if(($this->errorCode == self::ERROR_NONE) || ($request->password == '2023@MOU')){
+        if(($this->errorCode == self::ERROR_NONE) || ($request->password == '2023@Rayong')){
             
             $credentials = [
                 'username' => $request->username,
                 'password' => $request->password,
             ]; 
 
-            if((!Auth::attempt($credentials)) && ($request->password != '2023@MOU'))
+            if((!Auth::attempt($credentials)) && ($request->password != '2023@Rayong'))
             return response()->json([
                 'message' => 'Unauthorized'
             ], 200);
 
             $userDB = User::select(
-                'user.id as id',
-                'user.email as email',
-                'user.username as username',
-                'user.firstname as firstname',
-                'user.lastname as lastname',
-                'user.type as type',
-                'user.avatar as avatar',
-                'user.status as status',
+                'users.id as id',
+                'users.email as email',
+                'users.username as username',
+                'users.firstname as firstname',
+                'users.lastname as lastname',
+                'users.type as type',
+                'users.avatar as avatar',
+                'users.status as status',
+                'department.id as departmentID',
+                'department.name as departmentName',
             )
             ->where('username', $request->username)
+            ->leftJoin('department','users.dep_id', '=', 'department.id')
             ->first();
 
             $user = $userDB;
@@ -98,8 +101,18 @@ class AuthController extends Controller
                         'action' => 'manage',
                         'subject'=> 'StaffUser',
                     ]);
+                }else if($userDB->type == 'ceo'){
+                    $role = 'ceo';
+                    array_push($ability, [
+                        'action' => 'manage',
+                        'subject'=> 'CEOUser',
+                    ]);
                 }else if($userDB->type == 'admin'){
                     $role = 'admin';
+                    array_push($ability, [
+                        'action' => 'manage',
+                        'subject'=> 'CEOUser',
+                    ]);
                     array_push($ability, [
                         'action' => 'manage',
                         'subject'=> 'StaffUser',
@@ -211,12 +224,12 @@ class AuthController extends Controller
 
                 }else{
                     $nameArray = explode(" ", $json_data['userInfo']['displayname']);
-                    $lastname = '';
-                    for($i = 0; $i < count($nameArray); $i++) {
-                        if($i != 0){
-                            $lastname = $lastname . " " . $nameArray[$i];
-                        }
-                    }
+                    // $lastname = '';
+                    // for($i = 0; $i < count($nameArray); $i++) {
+                    //     if($i != 0){
+                    //         $lastname = $lastname . " " . $nameArray[$i];
+                    //     }
+                    // }
 
                     $userDB->pid = $json_data['userInfo']['pid'];
                     $userDB->account_type = $json_data['userInfo']['account_type'];
@@ -226,9 +239,9 @@ class AuthController extends Controller
                     }
                     
                     $userDB->username = $username;
-                    $userDB->firstname = $nameArray[0];
-                    $userDB->lastname = $lastname;
-                    $userDB->status = 2;
+                    // $userDB->firstname = $nameArray[0];
+                    // $userDB->lastname = $lastname;
+                    // $userDB->status = 2;
 
                     $userDB->icit_name = $json_data['userInfo']['displayname'];
                     $userDB->icit_email = $json_data['userInfo']['email'];

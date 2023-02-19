@@ -13,8 +13,8 @@ export default [
     action: "read",
   },
   {
-    title: "ความร่วมมือ/MOU",
-    route: "mou-list",
+    title: "เอกสารรับเข้า-ส่งออก",
+    route: "book-in-list",
     icon: "FileTextIcon",
     resource: "Auth",
     action: "read",

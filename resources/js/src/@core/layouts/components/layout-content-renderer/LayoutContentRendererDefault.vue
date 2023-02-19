@@ -10,9 +10,9 @@
     <div class="content-overlay" />
     <div class="header-navbar-shadow" />
 
-    <div class="mb-2 div-banner">
-      <img :src="bannerImg" alt="" style="width: 100%" />
-    </div>
+    <!-- <div class="mb-2 div-banner">
+      <img :src="bannerImg" alt="" style="width: 100%;height:200px;" />
+    </div> -->
 
     <div
       class="content-wrapper"
@@ -42,7 +42,7 @@ export default {
   },
   data() {
     return {
-      bannerImg: require("@/assets/images/banner/banner.jpeg"),
+      bannerImg: require("@/assets/images/banner/banner1.jpg"),
     };
   },
   setup() {

@@ -8,7 +8,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <!-- <link rel="icon" href="<%= BASE_URL %>favicon.ico"> -->
 
-  <title>MOU</title>
+  <title>ระบบสารบรรณ</title>
 
   <!-- Splash Screen/Loader Styles -->
   <link rel="stylesheet" type="text/css" href="{{ asset(mix('css/loader.css')) }}" />
@@ -31,7 +31,7 @@
   </noscript>
   <div id="loading-bg">
     <div class="loading-logo">
-      <!-- <img src="{{ asset('logo-sci.png') }}" alt="Logo" /> -->
+      <!-- <img src="{{ asset('logo-kmutnb.png') }}" alt="Logo" /> -->
     </div>
     <div class="loading">
       <div class="effect-1 effects"></div>

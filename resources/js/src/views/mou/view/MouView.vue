@@ -543,7 +543,7 @@ h6,
       <b-row>
         <b-col class="text-center mt-2">
           <h3>MOU Information</h3>
-          <hr width="80px;" style="border: solid 2px; border-color: #ffcb05" />
+          <hr width="80px;" style="border: solid 2px; border-color: #fe7300" />
         </b-col>
       </b-row>
       <b-row>

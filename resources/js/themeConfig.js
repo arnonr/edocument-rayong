@@ -9,9 +9,9 @@ export const $themeBreakpoints = {}
 // APP CONFIG
 export const $themeConfig = {
   app: {
-    appName: 'MOU', // Will update name in navigation menu (Branding)
+    appName: 'ระบบสารบรรณ', // Will update name in navigation menu (Branding)
     // eslint-disable-next-line global-require
-    appLogoImage: require('@/assets/images/logo/logo-sci.png'), // Will update logo in navigation menu (Branding)
+    appLogoImage: require('@/assets/images/logo/logo-kmutnb.png'), // Will update logo in navigation menu (Branding)
   },
   layout: {
     isRTL: false,
@@ -26,7 +26,7 @@ export const $themeConfig = {
     navbar: {
       // ? For horizontal menu, navbar type will work for navMenu type
       type: 'floating', // static , sticky , floating, hidden
-      backgroundColor: '#ffcb05', // BS color options [primary, success, etc]
+      backgroundColor: '#fe7300', // BS color options [primary, success, etc]
     },
     footer: {
       type: 'static', // static, sticky, hidden

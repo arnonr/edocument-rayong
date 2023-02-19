@@ -16,7 +16,7 @@
           class="mb-1 text-center"
           style="font-size: 1rem; color: #888;font-weight: 400;"
         >
-          Sign-in to your account
+          <!-- Sign-in to your account -->
         </b-card-title>
 
         <!-- form -->
@@ -156,7 +156,7 @@ export default {
       password: "",
       username: "",
       sideImg: require("@/assets/images/pages/login-v2.svg"),
-      logoImg: require("@/assets/images/logo/logo-login.jpeg"),
+      logoImg: require("@/assets/images/logo/logo-login.jpg"),
       // validation rules
       required,
       email,

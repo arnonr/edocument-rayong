@@ -42,7 +42,7 @@ body {
 }
 
 .footer-custom {
-    background-color: #ffcb05;
+    background-color: #fe7300;
 }
 
 .header-navbar .navbar-container ul.navbar-nav li > a.nav-link {
@@ -52,7 +52,11 @@ body {
 .horizontal-menu .header-navbar.navbar-horizontal.floating-nav {
     top: 43px !important;
     width: calc(100vw - (100vw - 100%) - calc(1rem * 0)) !important;
-    background: #ffcb05 !important;
+    background: #fe7300 !important;
+}
+
+.header-navbar .navbar-container ul.navbar-nav li > a.nav-link {
+    color: #fff;
 }
 
 .horizontal-menu .header-navbar.navbar-horizontal ul#main-menu-navigation > li.active > a {
@@ -66,8 +70,16 @@ body {
     color: #000 !important;
 }
 
+.horizontal-menu .header-navbar.navbar-horizontal ul#main-menu-navigation > li:hover > a {
+    color: #000 !important;
+}
+
 .horizontal-menu .header-navbar.navbar-brand-center .navbar-header .navbar-brand .brand-logo img {
-    max-width: 60px !important;
+    max-width: 200px !important;
+}
+
+.footer {
+    color: #fff;
 }
 
 // $font-family: "Gill Sans Extrabold", sans-serif;
