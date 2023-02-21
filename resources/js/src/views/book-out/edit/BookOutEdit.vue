@@ -28,10 +28,11 @@ import router from "../../../router";
 // Notification
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
+import { getUserData } from "@/auth/utils";
 
 import { onUnmounted, ref, reactive, watch } from "@vue/composition-api";
 import store from "@/store";
-import bookInStoreModule from "../bookInStoreModule";
+import bookOutStoreModule from "../bookOutStoreModule";
 
 export default {
   components: {
@@ -71,56 +72,61 @@ export default {
     };
   },
   setup() {
-    const BOOK_IN_EDIT_APP_STORE_MODULE_NAME = "book-in-edit";
+    const BOOK_OUT_EDIT_APP_STORE_MODULE_NAME = "book-out-edit";
 
     // Register module
-    if (!store.hasModule(BOOK_IN_EDIT_APP_STORE_MODULE_NAME))
+    if (!store.hasModule(BOOK_OUT_EDIT_APP_STORE_MODULE_NAME))
       store.registerModule(
-        BOOK_IN_EDIT_APP_STORE_MODULE_NAME,
-        bookInStoreModule
+        BOOK_OUT_EDIT_APP_STORE_MODULE_NAME,
+        bookOutStoreModule
       );
 
     // UnRegister on leave
     onUnmounted(() => {
-      if (store.hasModule(BOOK_IN_EDIT_APP_STORE_MODULE_NAME))
-        store.unregisterModule(BOOK_IN_EDIT_APP_STORE_MODULE_NAME);
+      if (store.hasModule(BOOK_OUT_EDIT_APP_STORE_MODULE_NAME))
+        store.unregisterModule(BOOK_OUT_EDIT_APP_STORE_MODULE_NAME);
     });
 
     const toast = useToast();
     const simpleRules = ref();
     const overLay = ref(false);
 
+    const isAdmin = getUserData().type == "admin" ? true : false;
+    const isStaff = getUserData().type == "staff" ? true : false;
+    const isCEO = getUserData().type == "ceo" ? true : false;
+
     const item = reactive({
       id: null,
       title: "",
-      book_in_category_id: null,
-      book_in_type_id: null,
-      book_from_no: "",
-      book_from_date: null,
-      book_from: "",
+      book_out_category_id: null,
       receive_date: null,
+      return_date: null,
       book_no: "",
+      book_date: null,
       to_send: "",
-      book_in_file: null,
-      book_in_file_old: null,
-      book_in_success_file: null,
-      book_in_success_file_old: null,
-      department_to: null,
+      book_out_file: null,
+      book_out_file_old: null,
+      book_out_success_file: null,
+      book_out_success_file_old: null,
+      department_id: null,
       book_to: null,
       book_reference: "",
       book_year_id: null,
       remark: "",
-      status_id: 4,
+      status_id: null,
+      is_publish: { title: "Publish", code: 1 },
+      user_id: null,
       is_publish: { title: "Publish", code: 1 },
       email_group: null,
+      is_send_email: null,
     });
 
     const book_code_latest = ref("เลขทะเบียนรับล่าสุด :");
 
-    const fetchBookCode = (book_in_category_id) => {
+    const fetchBookCode = (book_out_category_id) => {
       store
-        .dispatch("book-in-edit/fetchBookCode", {
-          book_in_category_id: book_in_category_id,
+        .dispatch("book-out-edit/fetchBookCode", {
+          book_out_category_id: book_out_category_id,
         })
         .then((response) => {
           book_code_latest.value =
@@ -140,18 +146,18 @@ export default {
     };
 
     const selectOptions = ref({
-      book_in_categories: [],
-      book_in_types: [],
-      departments: [],
+      book_out_categories: [],
+      book_out_types: [],
       email_groups: [],
       emails: [],
+      book_statuses: [],
     });
 
     store
-      .dispatch("book-in-edit/fetchBookInCategories")
+      .dispatch("book-out-edit/fetchBookOutCategories")
       .then((response) => {
         const { data } = response.data;
-        selectOptions.value.book_in_categories = data.map((d) => {
+        selectOptions.value.book_out_categories = data.map((d) => {
           return {
             code: d.id,
             title: d.name,
@@ -170,47 +176,15 @@ export default {
         });
       });
 
-    const fetchBookTypes = (book_in_category_id) => {
-      store
-        .dispatch("book-in-edit/fetchBookInTypes", {
-          book_in_category_id: book_in_category_id,
-        })
-        .then((response) => {
-          const { data } = response.data;
-          selectOptions.value.book_in_types = data.map((d) => {
-            return {
-              code: d.id,
-              title: d.name,
-            };
-          });
-        })
-        .catch((error) => {
-          console.log(error);
-          toast({
-            component: ToastificationContent,
-            props: {
-              title: "Error fetching Type's list",
-              icon: "AlertTriangleIcon",
-              variant: "danger",
-            },
-          });
-        });
-    };
-    fetchBookTypes(null);
-
     store
-      .dispatch("book-in-edit/fetchDepartments")
+      .dispatch("book-out-edit/fetchBookStatuses")
       .then((response) => {
         const { data } = response.data;
-        selectOptions.value.departments = data.map((d) => {
+        selectOptions.value.book_statuses = data.map((d) => {
           return {
             code: d.id,
             title: d.name,
           };
-        });
-        selectOptions.value.departments.unshift({
-          code: null,
-          title: "ทุกฝ่าย",
         });
       })
       .catch((error) => {
@@ -218,15 +192,42 @@ export default {
         toast({
           component: ToastificationContent,
           props: {
-            title: "Error fetching Department's list",
+            title: "Error fetching Status list",
             icon: "AlertTriangleIcon",
             variant: "danger",
           },
         });
       });
 
+    // store
+    //   .dispatch("book-out-edit/fetchDepartments")
+    //   .then((response) => {
+    //     const { data } = response.data;
+    //     selectOptions.value.departments = data.map((d) => {
+    //       return {
+    //         code: d.id,
+    //         title: d.name,
+    //       };
+    //     });
+    //     selectOptions.value.departments.unshift({
+    //       code: null,
+    //       title: "ทุกฝ่าย",
+    //     });
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //     toast({
+    //       component: ToastificationContent,
+    //       props: {
+    //         title: "Error fetching Department's list",
+    //         icon: "AlertTriangleIcon",
+    //         variant: "danger",
+    //       },
+    //     });
+    //   });
+
     store
-      .dispatch("book-in-edit/fetchEmailPersons")
+      .dispatch("book-out-edit/fetchEmailPersons")
       .then((response) => {
         const { data } = response.data;
         selectOptions.value.emails = data.map((d) => {
@@ -250,7 +251,7 @@ export default {
       });
 
     store
-      .dispatch("book-in-edit/fetchEmailGroups")
+      .dispatch("book-out-edit/fetchEmailGroups")
       .then((response) => {
         const { data } = response.data;
         selectOptions.value.email_groups = data.map((d) => {
@@ -274,7 +275,7 @@ export default {
       });
 
     store
-      .dispatch("book-in-edit/fetchBookIn", {
+      .dispatch("book-out-edit/fetchBookOut", {
         id: router.currentRoute.params.id,
       })
       .then((response) => {
@@ -282,51 +283,50 @@ export default {
         item.id = data.id;
         item.title = data.title;
 
-        item.book_in_category_id = {
-          title: data.book_in_category_name,
-          code: data.book_in_category_id,
+        item.book_out_category_id = {
+          title: data.book_out_category_name,
+          code: data.book_out_category_id,
         };
 
-        item.book_in_type_id = {
-          title: data.book_in_type_name,
-          code: data.book_in_type_id,
-        };
-
-        item.book_from_no = data.book_from_no;
-        item.book_from_date = data.book_from_date;
-        item.book_from = data.book_from;
-        item.receive_date = data.receive_date;
+        item.book_date = data.book_date;
         item.book_no = data.book_no;
         item.to_send = data.to_send;
 
-        if (data.department_to == null) {
-          item.department_to = {
-            title: "ทุกฝ่าย",
-            code: null,
-          };
-        } else {
-          item.department_to = {
-            title: data.department_name,
-            code: data.department_to,
-          };
+        // if (data.department_id == null) {
+        //   item.department_id = {
+        //     title: "ทุกฝ่าย",
+        //     code: null,
+        //   };
+        // } else {
+        //   item.department_id = {
+        //     title: data.department_name,
+        //     code: data.department_id,
+        //   };
+        // }
+
+        // item.book_to = JSON.parse(data.book_to);
+
+        item.book_out_file_old = null;
+        if (data.book_out_file != null) {
+          item.book_out_file_old = data.book_out_file;
         }
 
-        item.book_to = JSON.parse(data.book_to);
-
-        item.book_in_file_old = null;
-        if (data.book_in_file != null) {
-          item.book_in_file_old = data.book_in_file;
-        }
-
-        item.book_in_success_file_old = null;
-        if (data.book_in_success_file != null) {
-          item.book_in_success_file_old = data.book_in_success_file;
+        item.book_out_success_file_old = null;
+        if (data.book_out_success_file != null) {
+          item.book_out_success_file_old = data.book_out_success_file;
         }
 
         item.book_reference = data.book_reference;
         item.book_year_id = data.book_year_id;
         item.remark = data.remark;
-        item.status_id = data.status_id;
+        item.status_id = {
+          code: data.status_id,
+          title: data.status_name,
+        };
+        item.user_id = {
+          code: data.user_id,
+          title: data.fullname,
+        };
       })
       .catch((error) => {
         console.log(error);
@@ -351,52 +351,49 @@ export default {
     const onSubmit = (ctx, callback) => {
       overLay.value = true;
 
-      let book_to = null;
-      if (item.book_to) {
-        book_to = item.book_to.map((x) => {
-          if (!x.hasOwnProperty("email")) {
-            x.email = x.title;
-            x.code = null;
-          }
-          return {
-            title: x.title,
-            code: x.code,
-            email: x.email,
-          };
-        });
-      }
+      // let book_to = null;
+      // if (item.book_to) {
+      //   book_to = item.book_to.map((x) => {
+      //     if (!x.hasOwnProperty("email")) {
+      //       x.email = x.title;
+      //       x.code = null;
+      //     }
+      //     return {
+      //       title: x.title,
+      //       code: x.code,
+      //       email: x.email,
+      //     };
+      //   });
+      // }
 
       let dataSend = {
         id: item.id,
         title: item.title,
-        book_in_category_id: item.book_in_category_id.code,
-        book_in_type_id: item.book_in_type_id.code,
-        book_from_no: item.book_from_no,
-        book_from_date: item.book_from_date,
-        book_from: item.book_from,
+        book_out_category_id: item.book_out_category_id.code,
+        book_date: item.book_date,
         receive_date: item.receive_date,
         book_no: item.book_no,
         to_send: item.to_send,
-        book_in_file: item.book_in_file,
-        book_in_success_file: item.book_in_success_file,
-        department_to: item.department_to.code,
-        book_to: book_to,
+        book_out_file: item.book_out_file,
+        book_out_success_file: item.book_out_success_file,
         book_reference: item.book_reference,
-        // book_year_id: item.book_year_id.code,
         remark: item.remark,
-        status_id: item.status_id,
-        is_send_email: item.is_send_email,
+        status_id: item.status_id.code,
+        user_id: item.user_id.code,
         is_publish: item.is_publish.code,
+        book_to: item.book_to,
+        // book_year_id: item.book_year_id.code,
+        is_send_email: item.is_send_email,
       };
 
       store
-        .dispatch("book-in-edit/editBookIn", dataSend)
+        .dispatch("book-out-edit/editBookOut", dataSend)
         .then((response) => {
           if (response.data.message == "success") {
             localStorage.setItem("updated", 1);
             // console.log()
             router.push({
-              name: "book-in-view",
+              name: "book-out-view",
               params: { id: response.data.data.id },
             });
           } else {
@@ -424,52 +421,48 @@ export default {
         });
     };
 
+    // watch(
+    //   () => item.email_group,
+    //   (newData) => {
+    //     if (newData != null) {
+    //       // Find Email
+    //       let book_to_with_group = selectOptions.value.emails.filter((x) => {
+    //         let email_arr = item.email_group.email_all.map((e) => {
+    //           return e.code;
+    //         });
+    //         let findEmail = email_arr.includes(x.code);
+    //         return findEmail;
+    //       });
+
+    //       // Find Duplicate
+    //       let book_to_with_group_filter = null;
+    //       if (item.book_to) {
+    //         book_to_with_group_filter = book_to_with_group.filter((x) => {
+    //           let check = item.book_to.find((e) => {
+    //             return x.code === e.code;
+    //           });
+
+    //           return check ? false : true;
+    //         });
+    //       } else {
+    //         book_to_with_group_filter = book_to_with_group;
+    //       }
+
+    //       if (item.book_to == null) {
+    //         item.book_to = [];
+    //       }
+    //       item.book_to = [...item.book_to, ...book_to_with_group_filter];
+
+    //       console.log(item.book_to)
+    //     }
+    //   }
+    // );
+
     watch(
-      () => item.book_in_category_id,
+      () => item.book_out_category_id,
       (newValue, oldValue) => {
-        if (oldValue != null) {
-          item.book_in_type_id = null;
-        }
-        fetchBookTypes(newValue.code);
         fetchBookCode(newValue.code);
         //
-      }
-    );
-
-    watch(
-      () => item.email_group,
-      (newData) => {
-        if (newData != null) {
-          // Find Email
-          let book_to_with_group = selectOptions.value.emails.filter((x) => {
-            let email_arr = item.email_group.email_all.map((e) => {
-              return e.code;
-            });
-            let findEmail = email_arr.includes(x.code);
-            return findEmail;
-          });
-
-          // Find Duplicate
-          let book_to_with_group_filter = null;
-          if (item.book_to) {
-            book_to_with_group_filter = book_to_with_group.filter((x) => {
-              let check = item.book_to.find((e) => {
-                return x.code === e.code;
-              });
-
-              return check ? false : true;
-            });
-          } else {
-            book_to_with_group_filter = book_to_with_group;
-          }
-
-          if (item.book_to == null) {
-            item.book_to = [];
-          }
-          item.book_to = [...item.book_to, ...book_to_with_group_filter];
-
-          console.log(item.book_to)
-        }
       }
     );
 
@@ -480,6 +473,9 @@ export default {
       selectOptions,
       overLay,
       book_code_latest,
+      isAdmin,
+      isStaff,
+      isCEO,
     };
   },
 };
@@ -511,84 +507,22 @@ label {
         <b-form>
           <b-row>
             <b-col cols="12" class="text-center">
-              <h2>แก้ไขเอกสารรับเข้า-ส่งออก</h2>
+              <h2>แก้ไขเอกสารออกเลข</h2>
               <hr />
             </b-col>
           </b-row>
           <b-row>
             <!-- with prop append -->
 
-            <b-col cols="12" class="mt-2">
-              <h3>ข้อมูลต้นทาง</h3>
-              <hr />
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="เลขที่ต้นทาง :"
-                label-for="book_from_no"
-                label-cols-md="4"
-              >
-                <validation-provider #default="{ errors }" name="Book From No">
-                  <b-form-input
-                    id="book_from_no"
-                    placeholder="เลขเอกสารจากต้นทาง"
-                    v-model="item.book_from_no"
-                    :state="errors.length > 0 ? false : null"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="ลงวันที่ต้นทาง :"
-                label-for="book_from_date"
-                label-cols-md="4"
-              >
-                <validation-provider
-                  #default="{ errors }"
-                  name="Book From Date"
-                >
-                  <flat-pickr
-                    v-model="item.book_from_date"
-                    placeholder="ลงวันที่จากต้นทาง"
-                    :config="configDate"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="หน่วยงานต้นทาง :"
-                label-for="book_from"
-                label-cols-md="4"
-              >
-                <validation-provider #default="{ errors }" name="Book From">
-                  <b-form-input
-                    id="book_from"
-                    placeholder="หน่วยงานต้นทาง"
-                    v-model="item.book_from"
-                    :state="errors.length > 0 ? false : null"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
             <!-- partner group -->
             <b-col cols="12" class="mt-2">
               <h3>ข้อมูลเอกสาร</h3>
-              <hr />
             </b-col>
 
             <b-col cols="12">
               <b-form-group
                 label="หมวดหมู่เอกสาร :"
-                label-for="book_in_category_id"
+                label-for="book_out_category_id"
                 label-cols-md="4"
               >
                 <validation-provider
@@ -597,11 +531,11 @@ label {
                   rules="required"
                 >
                   <v-select
-                    input-id="book_in_category_id"
+                    input-id="book_out_category_id"
                     label="title"
-                    v-model="item.book_in_category_id"
+                    v-model="item.book_out_category_id"
                     :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                    :options="selectOptions.book_in_categories"
+                    :options="selectOptions.book_out_categories"
                     placeholder="-- เลือกหมวดหมู่เอกสาร --"
                     :clearable="false"
                   />
@@ -612,23 +546,65 @@ label {
 
             <b-col cols="12">
               <b-form-group
-                label="ประเภทเอกสาร :"
-                label-for="book_in_type_id"
+                label="ลงวันที่ :"
+                label-for="book_date"
                 label-cols-md="4"
               >
                 <validation-provider
                   #default="{ errors }"
-                  name="Type"
+                  name="Book Date"
                   rules="required"
                 >
-                  <v-select
-                    input-id="book_in_type_id"
-                    label="title"
-                    v-model="item.book_in_type_id"
-                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                    :options="selectOptions.book_in_types"
-                    placeholder="-- เลือกประเภทเอกสาร --"
-                    :clearable="false"
+                  <flat-pickr
+                    v-model="item.book_date"
+                    placeholder="ลงวันที่"
+                    :config="configDate"
+                  />
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </b-col>
+
+            <b-col cols="12">
+              <b-form-group
+                label="เลขที่เอกสาร"
+                label-for="book_no"
+                label-cols-md="4"
+              >
+                <validation-provider
+                  name="Book No"
+                  rules="required"
+                  #default="{ errors }"
+                >
+                  <b-input-group :append="book_code_latest">
+                    <b-form-input
+                      id="book_no"
+                      placeholder="เลขที่เอกสาร"
+                      v-model="item.book_no"
+                    />
+                  </b-input-group>
+
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </b-col>
+
+            <b-col cols="12">
+              <b-form-group
+                label="เรียนถึง (ชื่อผู้รับในเอกสาร) :"
+                label-for="to_send"
+                label-cols-md="4"
+              >
+                <validation-provider
+                  #default="{ errors }"
+                  name="To Send"
+                  rules="required"
+                >
+                  <b-form-input
+                    id="to_send"
+                    placeholder="เรียนถึง (ชื่อผู้รับในเอกสาร)"
+                    v-model="item.to_send"
+                    :state="errors.length > 0 ? false : null"
                   />
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
@@ -659,138 +635,26 @@ label {
 
             <b-col cols="12">
               <b-form-group
-                label="เรียนถึง (ชื่อผู้รับในเอกสาร) :"
-                label-for="to_send"
+                label="ผู้รับผิดชอบ :"
+                label-for="user_id"
                 label-cols-md="4"
               >
                 <validation-provider
                   #default="{ errors }"
-                  name="To Send"
+                  name="user_id"
                   rules="required"
                 >
-                  <b-form-input
-                    id="to_send"
-                    placeholder="เรียนถึง (ชื่อผู้รับในเอกสาร)"
-                    v-model="item.to_send"
-                    :state="errors.length > 0 ? false : null"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <!--  -->
-            <b-col cols="12">
-              <b-form-group
-                label="วันที่รับเอกสาร :"
-                label-for="receive_date"
-                label-cols-md="4"
-              >
-                <validation-provider
-                  #default="{ errors }"
-                  name="Receive Date"
-                  rules="required"
-                >
-                  <flat-pickr
-                    v-model="item.receive_date"
-                    placeholder="วันที่รับเอกสาร"
-                    :config="configDate"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <!-- เลชรับ -->
-            <b-col cols="12">
-              <b-form-group
-                label="เลขรับเอกสาร"
-                label-for="book_no"
-                label-cols-md="4"
-              >
-                <validation-provider
-                  name="Book No"
-                  rules="required"
-                  #default="{ errors }"
-                >
-                  <!-- <b-input-group prepend="$" append=".00">
-                    <b-form-input></b-form-input>
-                  </b-input-group> -->
-
-                  <b-input-group :append="book_code_latest">
-                    <b-form-input
-                      id="book_no"
-                      placeholder="เลขรับเอกสาร"
-                      v-model="item.book_no"
-                    />
-                  </b-input-group>
-
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="ฝ่ายที่เกี่ยวข้อง :"
-                label-for="department_to"
-                label-cols-md="4"
-              >
-                <validation-provider #default="{ errors }" name="Department To">
                   <v-select
-                    v-model="item.department_to"
-                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                    input-id="department_to"
+                    input-id="user_id"
                     label="title"
-                    :options="selectOptions.departments"
-                    placeholder="-- เลือกฝ่ายที่เกี่ยวข้อง --"
+                    v-model="item.user_id"
+                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
+                    placeholder="-- เลือกผู้รับผิดชอบ --"
+                    disabled
+                    :clearable="false"
                   />
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="ผู้ที่เกี่ยวข้อง (ส่งเมล)"
-                label-for="book_to"
-                label-cols-md="4"
-              >
-                <b-row>
-                  <b-col cols="12">
-                    <validation-provider name="Book To" #default="{ errors }">
-                      <v-select
-                        v-model="item.book_to"
-                        :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                        label="title"
-                        multiple
-                        taggable
-                        :options="selectOptions.emails"
-                        placeholder="-- เลือกผู้ที่เกี่ยวข้อง (ได้มากกว่า 1) --"
-                      />
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-col>
-                  <b-col cols="2" class="mt-2">
-                    <b-button
-                      type="button"
-                      variant="danger"
-                      @click.prevent="item.book_to = ''"
-                      class="mr-1"
-                    >
-                      Clear
-                    </b-button>
-                  </b-col>
-                  <b-col cols="10" class="mt-2">
-                    <v-select
-                      v-model="item.email_group"
-                      :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                      label="title"
-                      :options="selectOptions.email_groups"
-                      placeholder="-- เลือกจากกลุ่ม --"
-                    />
-                  </b-col>
-                </b-row>
               </b-form-group>
             </b-col>
 
@@ -815,23 +679,23 @@ label {
             <b-col cols="12">
               <b-form-group
                 label="ไฟล์ต้นฉบับ"
-                label-for="book_in_file"
+                label-for="book_out_file"
                 label-cols-md="4"
               >
-                <validation-provider name="book_in_file" #default="{ errors }">
+                <validation-provider name="book_out_file" #default="{ errors }">
                   <b-input-group>
                     <b-input-group-prepend>
                       <b-button
                         variant="outline-warning"
                         target="_blank"
-                        :href="item.book_in_file_old"
+                        :href="item.book_out_file_old"
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>
                     </b-input-group-prepend>
                     <b-form-file
-                      id="book_in_file"
-                      v-model="item.book_in_file"
+                      id="book_out_file"
+                      v-model="item.book_out_file"
                       placeholder="Choose a file or drop it here..."
                       drop-placeholder="Drop file here..."
                     />
@@ -845,11 +709,11 @@ label {
             <b-col cols="12">
               <b-form-group
                 label="ไฟล์ฉบับสมบูรณ์"
-                label-for="book_in_success_file"
+                label-for="book_out_success_file"
                 label-cols-md="4"
               >
                 <validation-provider
-                  name="book_in_success_file"
+                  name="book_out_success_file"
                   #default="{ errors }"
                 >
                   <b-input-group>
@@ -857,14 +721,14 @@ label {
                       <b-button
                         variant="outline-warning"
                         target="_blank"
-                        :href="item.book_in_success_file_old"
+                        :href="item.book_out_success_file_old"
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>
                     </b-input-group-prepend>
                     <b-form-file
-                      id="book_in_success_file"
-                      v-model="item.book_in_success_file"
+                      id="book_out_success_file"
+                      v-model="item.book_out_success_file"
                       placeholder="Choose a file or drop it here..."
                       drop-placeholder="Drop file here..."
                     />
@@ -874,9 +738,28 @@ label {
               </b-form-group>
             </b-col>
 
+            <b-col cols="12" v-if="isAdmin">
+              <b-form-group
+                label="สถานะ"
+                label-for="status_id"
+                label-cols-md="4"
+              >
+                <validation-provider name="status_id" #default="{ errors }">
+                  <v-select
+                    v-model="item.status_id"
+                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
+                    label="title"
+                    placeholder="-- เลือกสถานะ --"
+                    :options="selectOptions.book_statuses"
+                  />
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </b-col>
+
             <b-col cols="12">
               <b-form-group
-                label="ต้องการส่งเมลอีกครั้งใช่หรือไม่?"
+                label="ต้องการส่งเมลใช่หรือไม่?"
                 label-for="h-detail"
                 label-cols-md="4"
               >

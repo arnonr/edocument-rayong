@@ -13,6 +13,13 @@ export default [
     action: "read",
   },
   {
+    title: "เอกสารออกเลข",
+    route: "book-out-list",
+    icon: "FileTextIcon",
+    resource: "Auth",
+    action: "read",
+  },
+  {
     title: "เอกสารรับเข้า-ส่งออก",
     route: "book-in-list",
     icon: "FileTextIcon",

@@ -23,7 +23,7 @@ import { required, email } from "@validations";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { Thai } from "flatpickr/dist/l10n/th.js";
-import router from "../../../router";
+import router from "../../../../router";
 
 // Notification
 import { useToast } from "vue-toastification/composition";
@@ -31,7 +31,7 @@ import ToastificationContent from "@core/components/toastification/Toastificatio
 
 import { onUnmounted, ref, reactive, watch } from "@vue/composition-api";
 import store from "@/store";
-import bookInStoreModule from "../bookInStoreModule";
+import bookOutOldStoreModule from "../bookOutOldStoreModule";
 
 export default {
   components: {
@@ -71,19 +71,19 @@ export default {
     };
   },
   setup() {
-    const BOOK_IN_EDIT_APP_STORE_MODULE_NAME = "book-in-edit";
+    const BOOK_OUT_OLD_EDIT_APP_STORE_MODULE_NAME = "book-out-old-edit";
 
     // Register module
-    if (!store.hasModule(BOOK_IN_EDIT_APP_STORE_MODULE_NAME))
+    if (!store.hasModule(BOOK_OUT_OLD_EDIT_APP_STORE_MODULE_NAME))
       store.registerModule(
-        BOOK_IN_EDIT_APP_STORE_MODULE_NAME,
-        bookInStoreModule
+        BOOK_OUT_OLD_EDIT_APP_STORE_MODULE_NAME,
+        bookOutOldStoreModule
       );
 
     // UnRegister on leave
     onUnmounted(() => {
-      if (store.hasModule(BOOK_IN_EDIT_APP_STORE_MODULE_NAME))
-        store.unregisterModule(BOOK_IN_EDIT_APP_STORE_MODULE_NAME);
+      if (store.hasModule(BOOK_OUT_OLD_EDIT_APP_STORE_MODULE_NAME))
+        store.unregisterModule(BOOK_OUT_OLD_EDIT_APP_STORE_MODULE_NAME);
     });
 
     const toast = useToast();
@@ -93,19 +93,15 @@ export default {
     const item = reactive({
       id: null,
       title: "",
-      book_in_category_id: null,
-      book_in_type_id: null,
-      book_from_no: "",
-      book_from_date: null,
-      book_from: "",
+      book_out_category_id: null,
       receive_date: null,
       book_no: "",
       to_send: "",
-      book_in_file: null,
-      book_in_file_old: null,
-      book_in_success_file: null,
-      book_in_success_file_old: null,
-      department_to: null,
+      book_out_file: null,
+      book_out_file_old: null,
+      book_out_success_file: null,
+      book_out_success_file_old: null,
+      department_id: null,
       book_to: null,
       book_reference: "",
       book_year_id: null,
@@ -117,10 +113,11 @@ export default {
 
     const book_code_latest = ref("เลขทะเบียนรับล่าสุด :");
 
-    const fetchBookCode = (book_in_category_id) => {
+    const fetchBookCode = (book_out_category_id) => {
       store
-        .dispatch("book-in-edit/fetchBookCode", {
-          book_in_category_id: book_in_category_id,
+        .dispatch("book-out-old-edit/fetchBookCode", {
+          book_year_id: router.currentRoute.query.book_year_id,
+          book_out_category_id: book_out_category_id,
         })
         .then((response) => {
           book_code_latest.value =
@@ -140,18 +137,17 @@ export default {
     };
 
     const selectOptions = ref({
-      book_in_categories: [],
-      book_in_types: [],
+      book_out_categories: [],
       departments: [],
       email_groups: [],
       emails: [],
     });
 
     store
-      .dispatch("book-in-edit/fetchBookInCategories")
+      .dispatch("book-out-old-edit/fetchBookOutCategories")
       .then((response) => {
         const { data } = response.data;
-        selectOptions.value.book_in_categories = data.map((d) => {
+        selectOptions.value.book_out_categories = data.map((d) => {
           return {
             code: d.id,
             title: d.name,
@@ -170,36 +166,8 @@ export default {
         });
       });
 
-    const fetchBookTypes = (book_in_category_id) => {
-      store
-        .dispatch("book-in-edit/fetchBookInTypes", {
-          book_in_category_id: book_in_category_id,
-        })
-        .then((response) => {
-          const { data } = response.data;
-          selectOptions.value.book_in_types = data.map((d) => {
-            return {
-              code: d.id,
-              title: d.name,
-            };
-          });
-        })
-        .catch((error) => {
-          console.log(error);
-          toast({
-            component: ToastificationContent,
-            props: {
-              title: "Error fetching Type's list",
-              icon: "AlertTriangleIcon",
-              variant: "danger",
-            },
-          });
-        });
-    };
-    fetchBookTypes(null);
-
     store
-      .dispatch("book-in-edit/fetchDepartments")
+      .dispatch("book-out-old-edit/fetchDepartments")
       .then((response) => {
         const { data } = response.data;
         selectOptions.value.departments = data.map((d) => {
@@ -226,7 +194,7 @@ export default {
       });
 
     store
-      .dispatch("book-in-edit/fetchEmailPersons")
+      .dispatch("book-out-old-edit/fetchEmailPersons")
       .then((response) => {
         const { data } = response.data;
         selectOptions.value.emails = data.map((d) => {
@@ -250,7 +218,7 @@ export default {
       });
 
     store
-      .dispatch("book-in-edit/fetchEmailGroups")
+      .dispatch("book-out-old-edit/fetchEmailGroups")
       .then((response) => {
         const { data } = response.data;
         selectOptions.value.email_groups = data.map((d) => {
@@ -274,7 +242,7 @@ export default {
       });
 
     store
-      .dispatch("book-in-edit/fetchBookIn", {
+      .dispatch("book-out-old-edit/fetchBookOut", {
         id: router.currentRoute.params.id,
       })
       .then((response) => {
@@ -282,45 +250,38 @@ export default {
         item.id = data.id;
         item.title = data.title;
 
-        item.book_in_category_id = {
-          title: data.book_in_category_name,
-          code: data.book_in_category_id,
+        item.book_out_category_id = {
+          title: data.book_out_category_name,
+          code: data.book_out_category_id,
         };
 
-        item.book_in_type_id = {
-          title: data.book_in_type_name,
-          code: data.book_in_type_id,
-        };
-
-        item.book_from_no = data.book_from_no;
-        item.book_from_date = data.book_from_date;
-        item.book_from = data.book_from;
+        item.book_date = data.book_date;
         item.receive_date = data.receive_date;
         item.book_no = data.book_no;
         item.to_send = data.to_send;
 
-        if (data.department_to == null) {
-          item.department_to = {
+        if (data.department_id == null) {
+          item.department_id = {
             title: "ทุกฝ่าย",
             code: null,
           };
         } else {
-          item.department_to = {
+          item.department_id = {
             title: data.department_name,
-            code: data.department_to,
+            code: data.department_id,
           };
         }
 
         item.book_to = JSON.parse(data.book_to);
 
-        item.book_in_file_old = null;
-        if (data.book_in_file != null) {
-          item.book_in_file_old = data.book_in_file;
+        item.book_out_file_old = null;
+        if (data.book_out_file != null) {
+          item.book_out_file_old = data.book_out_file;
         }
 
-        item.book_in_success_file_old = null;
-        if (data.book_in_success_file != null) {
-          item.book_in_success_file_old = data.book_in_success_file;
+        item.book_out_success_file_old = null;
+        if (data.book_out_success_file != null) {
+          item.book_out_success_file_old = data.book_out_success_file;
         }
 
         item.book_reference = data.book_reference;
@@ -333,7 +294,7 @@ export default {
         toast({
           component: ToastificationContent,
           props: {
-            title: "Error Get Book In Information",
+            title: "Error Get Book Out Information",
             icon: "AlertTriangleIcon",
             variant: "danger",
           },
@@ -369,20 +330,16 @@ export default {
       let dataSend = {
         id: item.id,
         title: item.title,
-        book_in_category_id: item.book_in_category_id.code,
-        book_in_type_id: item.book_in_type_id.code,
-        book_from_no: item.book_from_no,
-        book_from_date: item.book_from_date,
-        book_from: item.book_from,
+        book_out_category_id: item.book_out_category_id.code,
         receive_date: item.receive_date,
+        book_date: item.book_date,
         book_no: item.book_no,
         to_send: item.to_send,
-        book_in_file: item.book_in_file,
-        book_in_success_file: item.book_in_success_file,
-        department_to: item.department_to.code,
+        book_out_file: item.book_out_file,
+        book_out_success_file: item.book_out_success_file,
+        department_id: item.department_id.code,
         book_to: book_to,
         book_reference: item.book_reference,
-        // book_year_id: item.book_year_id.code,
         remark: item.remark,
         status_id: item.status_id,
         is_send_email: item.is_send_email,
@@ -390,14 +347,15 @@ export default {
       };
 
       store
-        .dispatch("book-in-edit/editBookIn", dataSend)
+        .dispatch("book-out-old-edit/editBookOut", dataSend)
         .then((response) => {
           if (response.data.message == "success") {
             localStorage.setItem("updated", 1);
             // console.log()
             router.push({
-              name: "book-in-view",
+              name: "book-out-old-view",
               params: { id: response.data.data.id },
+              query: { book_year_id: router.currentRoute.query.book_year_id },
             });
           } else {
             toast({
@@ -415,7 +373,7 @@ export default {
           toast({
             component: ToastificationContent,
             props: {
-              title: "Edit Book In Error",
+              title: "Add Book Out Error",
               icon: "AlertTriangleIcon",
               variant: "danger",
             },
@@ -425,12 +383,8 @@ export default {
     };
 
     watch(
-      () => item.book_in_category_id,
+      () => item.book_out_category_id,
       (newValue, oldValue) => {
-        if (oldValue != null) {
-          item.book_in_type_id = null;
-        }
-        fetchBookTypes(newValue.code);
         fetchBookCode(newValue.code);
         //
       }
@@ -588,7 +542,7 @@ label {
             <b-col cols="12">
               <b-form-group
                 label="หมวดหมู่เอกสาร :"
-                label-for="book_in_category_id"
+                label-for="book_out_category_id"
                 label-cols-md="4"
               >
                 <validation-provider
@@ -597,37 +551,12 @@ label {
                   rules="required"
                 >
                   <v-select
-                    input-id="book_in_category_id"
+                    input-id="book_out_category_id"
                     label="title"
-                    v-model="item.book_in_category_id"
+                    v-model="item.book_out_category_id"
                     :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                    :options="selectOptions.book_in_categories"
+                    :options="selectOptions.book_out_categories"
                     placeholder="-- เลือกหมวดหมู่เอกสาร --"
-                    :clearable="false"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="ประเภทเอกสาร :"
-                label-for="book_in_type_id"
-                label-cols-md="4"
-              >
-                <validation-provider
-                  #default="{ errors }"
-                  name="Type"
-                  rules="required"
-                >
-                  <v-select
-                    input-id="book_in_type_id"
-                    label="title"
-                    v-model="item.book_in_type_id"
-                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                    :options="selectOptions.book_in_types"
-                    placeholder="-- เลือกประเภทเอกสาร --"
                     :clearable="false"
                   />
                   <small class="text-danger">{{ errors[0] }}</small>
@@ -815,23 +744,23 @@ label {
             <b-col cols="12">
               <b-form-group
                 label="ไฟล์ต้นฉบับ"
-                label-for="book_in_file"
+                label-for="book_out_file"
                 label-cols-md="4"
               >
-                <validation-provider name="book_in_file" #default="{ errors }">
+                <validation-provider name="book_out_file" #default="{ errors }">
                   <b-input-group>
                     <b-input-group-prepend>
                       <b-button
                         variant="outline-warning"
                         target="_blank"
-                        :href="item.book_in_file_old"
+                        :href="item.book_out_file_old"
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>
                     </b-input-group-prepend>
                     <b-form-file
-                      id="book_in_file"
-                      v-model="item.book_in_file"
+                      id="book_out_file"
+                      v-model="item.book_out_file"
                       placeholder="Choose a file or drop it here..."
                       drop-placeholder="Drop file here..."
                     />
@@ -845,11 +774,11 @@ label {
             <b-col cols="12">
               <b-form-group
                 label="ไฟล์ฉบับสมบูรณ์"
-                label-for="book_in_success_file"
+                label-for="book_out_success_file"
                 label-cols-md="4"
               >
                 <validation-provider
-                  name="book_in_success_file"
+                  name="book_out_success_file"
                   #default="{ errors }"
                 >
                   <b-input-group>
@@ -857,14 +786,14 @@ label {
                       <b-button
                         variant="outline-warning"
                         target="_blank"
-                        :href="item.book_in_success_file_old"
+                        :href="item.book_out_success_file_old"
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>
                     </b-input-group-prepend>
                     <b-form-file
-                      id="book_in_success_file"
-                      v-model="item.book_in_success_file"
+                      id="book_out_success_file"
+                      v-model="item.book_out_success_file"
                       placeholder="Choose a file or drop it here..."
                       drop-placeholder="Drop file here..."
                     />
@@ -891,13 +820,21 @@ label {
               </b-form-group>
             </b-col>
             <!-- submit and reset -->
-            <b-col offset-md="4">
+            <b-col offset-md="12" class="text-center">
               <b-button
                 type="submit"
                 variant="primary"
                 @click.prevent="validationForm"
               >
                 Submit
+              </b-button>
+
+              <b-button
+                style="float: right"
+                variant="outline-info"
+                @click="$router.push({ name: 'book-out-old', query: { book_year_id: $router.currentRoute.query.book_year_id } });"
+              >
+                Back to List
               </b-button>
             </b-col>
           </b-row>

@@ -19,6 +19,9 @@ use App\Http\Controllers\BookInCategoryController;
 use App\Http\Controllers\BookInTypeController;
 use App\Http\Controllers\BookInController;
 use App\Http\Controllers\BookYearController;
+
+use App\Http\Controllers\BookOutCategoryController;
+use App\Http\Controllers\BookOutController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -93,7 +96,6 @@ Route::group(['prefix' => 'department'], function () {
     Route::delete('/{id}', [DepartmentController::class, 'delete']);
 });
 
-
 Route::group(['prefix' => 'book-in-category'], function () {
     Route::get('/', [BookInCategoryController::class, 'getAll']);
     Route::get('/{id}', [BookInCategoryController::class, 'get']);
@@ -147,6 +149,24 @@ Route::group(['prefix' => 'book-year'], function () {
     Route::post('/', [BookYearController::class, 'add']);
     Route::put('/', [BookYearController::class, 'edit']);
     Route::delete('/{id}', [BookYearController::class, 'delete']);
+});
+
+// 
+Route::group(['prefix' => 'book-out-category'], function () {
+    Route::get('/', [BookOutCategoryController::class, 'getAll']);
+    Route::get('/{id}', [BookOutCategoryController::class, 'get']);
+    Route::post('/', [BookOutCategoryController::class, 'add']);
+    Route::put('/', [BookOutCategoryController::class, 'edit']);
+    Route::delete('/{id}', [BookOutCategoryController::class, 'delete']);
+});
+
+Route::group(['prefix' => 'book-out'], function () {
+    Route::get('/generate-code', [BookOutController::class, 'generateCode']);
+    Route::get('/{id}', [BookOutController::class, 'get']);
+    Route::get('/', [BookOutController::class, 'getAll']);
+    Route::post('/', [BookOutController::class, 'add']);
+    Route::put('/{id}', [BookOutController::class, 'edit']);
+    Route::delete('/{id}', [BookOutController::class, 'delete']);
 });
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {

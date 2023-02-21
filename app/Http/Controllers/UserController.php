@@ -129,15 +129,20 @@ class UserController extends Controller
     {
         // User DB
         $items = User::select(
-            'user.id as id',
-            'user.username as username',
-            'user.firstname as firstname',
-            'user.lastname as lastname',
-            'user.email as email',
-            'user.type as type',
-            'user.status as status',
+            'users.id as id',
+            'users.email as email',
+            'users.username as username',
+            'users.prefix as prefix',
+            'users.firstname as firstname',
+            'users.lastname as lastname',
+            'users.type as type',
+            'users.avatar as avatar',
+            'users.status as status',
+            'department.id as departmentID',
+            'department.name as departmentName',
         )
-        ->where('user.deleted_at', null);
+        ->where('users.active', 1)
+        ->leftJoin('department','users.dep_id','=','department.id');
 
         if ($request->id) {
             $items->where('user.id', $request->id);
