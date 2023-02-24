@@ -91,11 +91,9 @@ export default {
     const simpleRules = ref();
     const overLay = ref(false);
 
-
     const isAdmin = getUserData().type == "admin" ? true : false;
     const isStaff = getUserData().type == "staff" ? true : false;
     const isCEO = getUserData().type == "ceo" ? true : false;
-
 
     const item = reactive({
       id: null,
@@ -115,7 +113,7 @@ export default {
       book_reference: "",
       book_year_id: null,
       remark: "",
-      status_id: {title: 'รอสารบรรณรับเรื่อง',code: 1},
+      status_id: { title: "รอสารบรรณรับเรื่อง", code: 1 },
       user_id: { code: getUserData().userID, title: getUserData().fullName },
       is_publish: { title: "Publish", code: 1 },
       email_group: null,
@@ -130,7 +128,7 @@ export default {
         })
         .then((response) => {
           book_code_latest.value =
-            "เลขทะเบียนรับล่าสุด : " + response.data.data.code_lastest;
+            "เลขทะเบียนรับล่าสุด : " + response.data.data.code_latest;
           item.book_no = response.data.data.code_next;
         })
         .catch(() => {
@@ -150,7 +148,8 @@ export default {
       departments: [],
       email_groups: [],
       emails: [],
-      book_statuses: []
+      book_statuses: [],
+      users: [],
     });
 
     store
@@ -176,7 +175,7 @@ export default {
         });
       });
 
-      store
+    store
       .dispatch("book-out-add/fetchBookStatuses")
       .then((response) => {
         const { data } = response.data;
@@ -193,6 +192,29 @@ export default {
           component: ToastificationContent,
           props: {
             title: "Error fetching Status list",
+            icon: "AlertTriangleIcon",
+            variant: "danger",
+          },
+        });
+      });
+
+    store
+      .dispatch("book-out-add/fetchUsers")
+      .then((response) => {
+        const { data } = response.data;
+        selectOptions.value.users = data.map((d) => {
+          return {
+            code: d.id,
+            title: d.prefix+d.firstname+" "+d.lastname,
+          };
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          component: ToastificationContent,
+          props: {
+            title: "Error fetching User list",
             icon: "AlertTriangleIcon",
             variant: "danger",
           },
@@ -406,7 +428,7 @@ export default {
       book_code_latest,
       isAdmin,
       isStaff,
-      isCEO
+      isCEO,
     };
   },
 };
@@ -583,7 +605,8 @@ label {
                     v-model="item.user_id"
                     :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
                     placeholder="-- เลือกผู้รับผิดชอบ --"
-                    disabled
+                    :options="selectOptions.users"
+                    :disabled="isAdmin ? false : true"
                     :clearable="false"
                   />
                   <small class="text-danger">{{ errors[0] }}</small>
@@ -656,10 +679,7 @@ label {
                 label-for="status_id"
                 label-cols-md="4"
               >
-                <validation-provider
-                  name="status_id"
-                  #default="{ errors }"
-                >
+                <validation-provider name="status_id" #default="{ errors }">
                   <v-select
                     v-model="item.status_id"
                     :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"

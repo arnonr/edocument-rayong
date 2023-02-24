@@ -291,6 +291,7 @@ export default {
       ],
       years: [],
       users: [],
+      book_statuses: []
     });
 
     const yearSelect = dayjs().locale("th").format("BBBB");
@@ -352,8 +353,8 @@ export default {
       });
 
     store
-      .dispatch("book-out/fetchUsers",{
-        perPage: 100
+      .dispatch("book-out/fetchUsers", {
+        perPage: 100,
       })
       .then((response) => {
         const { data } = response.data;
@@ -361,6 +362,31 @@ export default {
           return {
             code: d.id,
             title: d.prefix + d.firstname + " " + d.lastname,
+          };
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          component: ToastificationContent,
+          props: {
+            title: "Error fetching User's list",
+            icon: "AlertTriangleIcon",
+            variant: "danger",
+          },
+        });
+      });
+
+    store
+      .dispatch("book-out/fetchBookStatuses", {
+        perPage: 100,
+      })
+      .then((response) => {
+        const { data } = response.data;
+        selectOptions.value.book_statuses = data.map((d) => {
+          return {
+            code: d.id,
+            title: d.name,
           };
         });
       })
@@ -393,6 +419,12 @@ export default {
       if (search.user_id) {
         if (search.user_id.hasOwnProperty("code")) {
           search.user_id = search.user_id.code;
+        }
+      }
+
+      if (search.status_id) {
+        if (search.status_id.hasOwnProperty("code")) {
+          search.status_id = search.status_id.code;
         }
       }
 
@@ -700,7 +732,7 @@ label {
           <b-form-group
             label="สถานะเอกสาร"
             label-for="status_id"
-            class="col-md-2"
+            class="col-md-3"
           >
             <v-select
               v-model="advancedSearch.status_id"
@@ -708,14 +740,14 @@ label {
               label="title"
               :clearable="true"
               placeholder="-- All Status --"
-              :options="selectOptions.departments"
+              :options="selectOptions.book_statuses"
             />
           </b-form-group>
 
           <b-form-group
             label="เรียนถึง (ชื่อผู้รับในเอกสาร)"
             label-for="to_send"
-            class="col-md-4"
+            class="col-md-3"
           >
             <b-form-input
               id="to_send"

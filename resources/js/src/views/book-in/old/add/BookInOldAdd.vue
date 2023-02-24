@@ -87,6 +87,7 @@ export default {
     const toast = useToast();
     const simpleRules = ref();
     const overLay = ref(false);
+    const isDepartment = ref(true);
 
     const item = reactive({
       id: null,
@@ -312,7 +313,8 @@ export default {
         to_send: item.to_send,
         book_in_file: item.book_in_file,
         book_in_success_file: item.book_in_success_file,
-        department_to: item.department_to.code,
+        department_to:
+          item.department_to != null ? item.department_to.code : null,
         book_to: book_to,
         book_reference: item.book_reference,
         // book_year_id: item.book_year_id.code,
@@ -363,6 +365,11 @@ export default {
         item.book_in_type_id = null;
         fetchBookTypes(value.code);
         fetchBookCode(value.code);
+        if (value.code == 1) {
+          isDepartment.value = true;
+        } else {
+          isDepartment.value = false;
+        }
         //
       }
     );
@@ -409,6 +416,7 @@ export default {
       selectOptions,
       overLay,
       book_code_latest,
+      isDepartment,
     };
   },
 };
@@ -423,6 +431,15 @@ export default {
 }
 label {
   font-size: 1rem;
+}
+
+.div-spinner {
+  bottom: 10em;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
 }
 </style>
 
@@ -664,6 +681,7 @@ label {
                 label="ฝ่ายที่เกี่ยวข้อง :"
                 label-for="department_to"
                 label-cols-md="4"
+                v-if="isDepartment"
               >
                 <validation-provider #default="{ errors }" name="Department To">
                   <v-select
@@ -807,15 +825,7 @@ label {
       <template #overlay>
         <div>
           <div
-            class="position-absolute"
-            style="
-              bottom: 10em;
-              margin-left: auto;
-              margin-right: auto;
-              left: 0;
-              right: 0;
-              text-align: center;
-            "
+            class="position-absolute div-spinner"
           >
             <b-spinner type="border" variant="primary"></b-spinner>
             <br />

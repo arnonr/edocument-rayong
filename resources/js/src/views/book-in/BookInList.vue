@@ -24,7 +24,6 @@ import { Thai } from "flatpickr/dist/l10n/th.js";
 
 import dayjs from "dayjs";
 import "dayjs/locale/th";
-import isBetween from "dayjs/plugin/isBetween";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 
@@ -141,6 +140,7 @@ export default {
       to_send: "",
       department_to: null,
       year: null,
+      department_to_null: false,
     });
 
     const resetAdvancedSearch = () => {
@@ -281,20 +281,20 @@ export default {
         { title: "น้อย -> มาก", code: "asc" },
         { title: "มาก -> น้อย", code: "desc" },
       ],
-      years: [],
+      book_years: [],
     });
 
-    const yearSelect = dayjs().locale("th").format("BBBB");
-    selectOptions.value.years.push({
-      title: String(yearSelect),
-      code: String(yearSelect),
-    });
-    for (let i = 1; i <= 9; i++) {
-      selectOptions.value.years.push({
-        title: String(parseInt(yearSelect) - i),
-        code: String(parseInt(yearSelect) - i),
-      });
-    }
+    // const yearSelect = dayjs().locale("th").format("BBBB");
+    // selectOptions.value.years.push({
+    //   title: String(yearSelect),
+    //   code: String(yearSelect),
+    // });
+    // for (let i = 1; i <= 9; i++) {
+    //   selectOptions.value.years.push({
+    //     title: String(parseInt(yearSelect) - i),
+    //     code: String(parseInt(yearSelect) - i),
+    //   });
+    // }
 
     store
       .dispatch("book-in/fetchBookInCategories")
@@ -319,28 +319,38 @@ export default {
         });
       });
 
-    store
-      .dispatch("book-in/fetchBookInTypes")
-      .then((response) => {
-        const { data } = response.data;
-        selectOptions.value.book_in_types = data.map((d) => {
-          return {
-            code: d.id,
-            title: d.name,
-          };
+    const fetchBookTypes = (book_in_category_id) => {
+      if (isStaff) {
+        book_in_category_id = 1;
+      }
+
+      store
+        .dispatch("book-in/fetchBookInTypes", {
+          book_in_category_id: book_in_category_id,
+        })
+        .then((response) => {
+          const { data } = response.data;
+          selectOptions.value.book_in_types = data.map((d) => {
+            return {
+              code: d.id,
+              title: d.name,
+            };
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            component: ToastificationContent,
+            props: {
+              title: "Error fetching Type's list",
+              icon: "AlertTriangleIcon",
+              variant: "danger",
+            },
+          });
         });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast({
-          component: ToastificationContent,
-          props: {
-            title: "Error fetching Type's list",
-            icon: "AlertTriangleIcon",
-            variant: "danger",
-          },
-        });
-      });
+    };
+
+    fetchBookTypes(null);
 
     store
       .dispatch("book-in/fetchDepartments")
@@ -367,7 +377,11 @@ export default {
 
     const fetchItems = () => {
       let search = { ...advancedSearch };
-      if (search.book_in_category_id) {
+      if (isStaff) {
+        search.book_in_category_id = 1;
+        search.department_to = getUserData().department.id;
+        search.department_to_null = true;
+      }else if (search.book_in_category_id) {
         if (search.book_in_category_id.hasOwnProperty("code")) {
           search.book_in_category_id = search.book_in_category_id.code;
         }
@@ -422,26 +436,15 @@ export default {
     };
     fetchItems();
 
-    // watch(
-    //   () => advancedSearch.type,
-    //   (value) => {
-    //     if (value) {
-    //       if (value.code == 1) {
-    //         advancedSearch.country_code = { title: "ไทย", code: "THA" };
-    //       } else {
-    //         advancedSearch.country_code = {
-    //           title: "-- All Country --",
-    //           code: null,
-    //         };
-    //       }
-    //     } else {
-    //       advancedSearch.country_code = {
-    //         title: "-- All Country --",
-    //         code: null,
-    //       };
-    //     }
-    //   }
-    // );
+    watch(
+      () => advancedSearch.book_in_category_id,
+      (value) => {
+        advancedSearch.book_in_type_id = null;
+        if (advancedSearch.book_in_category_id != null) {
+          fetchBookTypes(value.code);
+        }
+      }
+    );
 
     watchEffect(() => {
       fetchItems();
@@ -627,7 +630,7 @@ label {
           </b-col>
         </b-row>
         <b-row>
-          <b-form-group label="เรื่อง/Title" label-for="title" class="col-md-4">
+          <b-form-group label="เรื่อง/Title" label-for="title" :class="isStaff ? 'col-md-6' : 'col-md-4'">
             <b-form-input
               id="title"
               v-model="advancedSearch.title"
@@ -639,6 +642,7 @@ label {
             label="หมวดหมู่เอกสาร/Category"
             label-for="category"
             class="col-md-4"
+            v-if="isAdmin || isCEO"
           >
             <v-select
               v-model="advancedSearch.book_in_category_id"
@@ -653,7 +657,7 @@ label {
           <b-form-group
             label="ประเภทเอกสาร/Type"
             label-for="type"
-            class="col-md-4"
+            :class="isStaff ? 'col-md-6' : 'col-md-4'"
           >
             <v-select
               v-model="advancedSearch.book_in_type_id"
@@ -704,7 +708,7 @@ label {
           <b-form-group
             label="วันที่รับเอกสาร/Receive Date"
             label-for="receive_date"
-            class="col-md-3"
+            :class="isStaff ? 'col-md-4' : 'col-md-3'"
           >
             <flat-pickr
               v-model="advancedSearch.receive_date"
@@ -716,7 +720,7 @@ label {
           <b-form-group
             label="เลขรับ/Book No"
             label-for="book_no"
-            class="col-md-2"
+            :class="isStaff ? 'col-md-4' : 'col-md-2'"
           >
             <b-form-input
               id="book_no"
@@ -728,7 +732,7 @@ label {
           <b-form-group
             label="เรียนถึง (ชื่อผู้รับในเอกสาร)"
             label-for="to_send"
-            class="col-md-3"
+            :class="isStaff ? 'col-md-4' : 'col-md-3'"
           >
             <b-form-input
               id="to_send"
@@ -741,6 +745,7 @@ label {
             label="ฝ่ายที่เกี่ยวข้อง/Department"
             label-for="department"
             class="col-md-4"
+            v-if="isAdmin || isCEO"
           >
             <v-select
               v-model="advancedSearch.department_to"
@@ -770,7 +775,7 @@ label {
           <b-row>
             <b-col>
               <b-button
-                v-if="isAdmin || isStaff"
+                v-if="isAdmin"
                 variant="outline-success"
                 @click="$router.push({ name: 'book-in-add' })"
                 style="margin-top: 1em"
@@ -780,7 +785,7 @@ label {
               </b-button>
 
               <b-button
-                v-if="isAdmin || isStaff"
+                v-if="isAdmin"
                 variant="outline-warning"
                 style="margin-top: 1em"
                 v-b-modal.modal-export
@@ -794,7 +799,7 @@ label {
               <b-button
                 variant="outline-info"
                 @click="$router.push({ name: 'book-in-old' })"
-                class="float-right"
+                :class="isStaff ? '' : 'float-right'"
                 style="margin-top: 1em"
               >
                 <feather-icon icon="ArchiveIcon" />
@@ -905,6 +910,7 @@ label {
                     alt="แก้ไข"
                     title="แก้ไข"
                     class="btn-icon btn-sm"
+                    v-if="isAdmin"
                     @click="
                       $router.push({
                         name: 'book-in-edit',

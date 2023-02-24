@@ -116,7 +116,7 @@ class BookOutController extends Controller
         }
 
         if ($request->status_id) {
-            $items->where('book_out.status_is',$request->status_id);
+            $items->where('book_out.status_id',$request->status_id);
         }
 
         if ($request->start_receive_date) {
@@ -486,7 +486,6 @@ class BookOutController extends Controller
         $code_latest = "";
         $code_next = "";
         if($data){
-
             $code_latest = $data->book_no;
             $code = explode("/", $code_latest);
             $code_next = floor(intval($code[0]))+1;
@@ -531,7 +530,7 @@ class BookOutController extends Controller
                 $cl = '00/';
                 $cn = '01/';
             }
-            $code_lastest = $cl.$book_year->name;
+            $code_latest = $cl.$book_year->name;
             $code_next = $cn.$book_year->name;
         }
         // codeLastest
@@ -539,7 +538,7 @@ class BookOutController extends Controller
         return response()->json([
             'message' => 'success',
             'data' => [
-                'code_lastest' => $code_latest,
+                'code_latest' => $code_latest,
                 'code_next' => $code_next,
             ],
         ], 200);

@@ -96,11 +96,13 @@ export default {
 
     const toast = useToast();
     const isAdmin = getUserData().type == "admin" ? true : false;
+    const isCEO = getUserData().type == "ceo" ? true : false;
     const isStaff = getUserData().type == "staff" ? true : false;
     const overLay = ref(false);
-    const isActivityModal = ref(false);
-    const isActivitySubmit = ref(false);
+    // const isActivityModal = ref(false);
+    // const isActivitySubmit = ref(false);
     const simpleRules = ref();
+    const isDepartment = ref(true);
 
     const errorToast = (message) => {
       toast({
@@ -158,6 +160,11 @@ export default {
           book_to = book_to.toString();
         }
         data.book_to = book_to;
+        if (data.book_in_category_id == 2) {
+          isDepartment.value = false;
+        } else {
+          isDepartment.value = true;
+        }
         item.value = data;
       })
       .catch((error) => {
@@ -229,6 +236,7 @@ export default {
       simpleRules,
       isAdmin,
       isStaff,
+      isDepartment,
     };
   },
 };
@@ -341,9 +349,13 @@ h6,
           <span class="label">เรียนถึง (ชื่อผู้รับในเอกสาร) : </span>
           <span class="text-data font-italic">{{ item.to_send }}</span>
           <hr />
-          <span class="label">หน่วยงานที่เกี่ยวข้อง : </span>
-          <span class="text-data font-italic">{{ item.department_name ? item.department_name : "ทุกฝ่าย" }}</span>
-          <hr />
+          <span class="label" v-if="isDepartment"
+            >หน่วยงานที่เกี่ยวข้อง :
+          </span>
+          <span class="text-data font-italic" v-if="isDepartment">{{
+            item.department_name ? item.department_name : "ทุกฝ่าย"
+          }}</span>
+          <hr v-if="isDepartment" />
           <span class="label">ส่งเมล : </span>
           <span class="text-data font-italic">
             {{ item.book_to }}
@@ -366,11 +378,9 @@ h6,
           <span class="label">ไฟล์ : </span>
           <span class="text-data">
             <b-button
-              :disabled="
-                (isAdmin || isStaff) && item.book_in_file != null ? false : true
-              "
+              :disabled="item.book_in_file != null ? false : true"
               :variant="
-                (isAdmin || isStaff) && item.book_in_file != null
+                item.book_in_file != null
                   ? 'outline-success'
                   : 'outline-secondary'
               "
@@ -386,13 +396,9 @@ h6,
             </b-button>
             |
             <b-button
-              :disabled="
-                (isAdmin || isStaff) && item.book_in_success_file != null
-                  ? false
-                  : true
-              "
+              :disabled="item.book_in_success_file != null ? false : true"
               :variant="
-                (isAdmin || isStaff) && item.book_in_success_file != null
+                item.book_in_success_file != null
                   ? 'outline-warning'
                   : 'outline-secondary'
               "
@@ -411,7 +417,7 @@ h6,
       </b-row>
 
       <b-row>
-        <b-col class="mt-4 text-center" v-if="isAdmin || isStaff">
+        <b-col class="mt-4 text-center">
           <b-button
             type="button"
             variant="outline-success"
@@ -421,7 +427,7 @@ h6,
                 params: { id: item.id },
               })
             "
-            v-if="isAdmin || isStaff"
+            v-if="isAdmin"
           >
             แก้ไขเอกสาร</b-button
           >
@@ -433,6 +439,18 @@ h6,
           >
             ลบเอกสาร</b-button
           >
+
+          <b-button
+            style="float: right"
+            variant="outline-info"
+            @click="
+              $router.push({
+                name: 'book-in-list',
+              })
+            "
+          >
+            Back to List
+          </b-button>
         </b-col>
       </b-row>
 

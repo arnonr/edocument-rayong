@@ -114,7 +114,16 @@ class BookInController extends Controller
         }
 
         if ($request->department_to) {
-            $items->where('book_in.department_to',$request->department_to);
+            if($request->department_to_null == true){
+
+                $items->where(function($query) use ($request) {
+                    $query->whereNull('book_in.department_to')
+                            ->orWhere('book_in.department_to', $request->department_to);
+                });
+
+            }else{
+                $items->where('book_in.department_to',$request->department_to);
+            }
         }
 
         if ($request->is_publish) {
@@ -318,7 +327,7 @@ class BookInController extends Controller
                 $this->sendMail($value['email'], $data);
             }
         }
-
+        
         $responseData = [
             'message' => 'success',
             'data' => $data,
@@ -562,27 +571,29 @@ class BookInController extends Controller
         $year = $date_receive->year + 543;
         $date_receive = $date_receive->format("j $month $year");
 
-        $details = [
-            'title' => $data->title,
-            'body' => '
-            เรื่อง : '.$data->title.'<br>
-            จาก : '.$data->book_from.'<br>
-            วันที่รับ : '.$date_receive.'<br>
-            ไฟล์เอกสาร: <a href="'.$this->uploadUrl.$data->book_in_file.'">เปิดไฟล์</a>'
-        ];
+        if($data->book_in_success_file != null){
+            $details = [
+                'title' => $data->title,
+                'body' => '
+                เรื่อง : '.$data->title.'<br>
+                จาก : '.$data->book_from.'<br>
+                วันที่รับ : '.$date_receive.'<br>
+                ไฟล์ฉบับสมบูรณ์: <a href="'.$this->uploadUrl.$data->book_in_success_file.'">เปิดไฟล์</a>'
+            ];
 
-         // ไฟล์เอกสาร: <a href="'.env('APP_URL').'http://edoc.fba.kmutnb.ac.th/storage'.$data->file.'">เปิดไฟล์</a>'
-        // ไฟล์เอกสาร: <a href="'.env('APP_URL').'storage'.$data->file.'">เปิดไฟล์</a>'
-        // var_dump($data->file);
-        $file1 = public_path($data->book_in_file);
+            // ไฟล์เอกสาร: <a href="'.env('APP_URL').'http://edoc.fba.kmutnb.ac.th/storage'.$data->file.'">เปิดไฟล์</a>'
+            // ไฟล์เอกสาร: <a href="'.env('APP_URL').'storage'.$data->file.'">เปิดไฟล์</a>'
+            // var_dump($data->file);
+            $file1 = public_path($data->book_in_success_file);
 
-        try {
-            // \Mail::to($email)->send(new \App\Mail\MyMail($details, $data->title, $template, $data->file), $details, function($message)use($details , $data, $file1, $email) {
-            //     $message->to($email)->subject($data->title)->attach($file1);
-            // });
-            \Mail::to($email)->send(new \App\Mail\MyMail($details, $data->title, $template, $data->book_in_file));
-        } catch (Throwable $e) {
-            $sendmail = false;
+            try {
+                // \Mail::to($email)->send(new \App\Mail\MyMail($details, $data->title, $template, $data->file), $details, function($message)use($details , $data, $file1, $email) {
+                //     $message->to($email)->subject($data->title)->attach($file1);
+                // });
+                \Mail::to($email)->send(new \App\Mail\MyMail($details, $data->title, $template, $data->book_in_success_file));
+            } catch (Throwable $e) {
+                $sendmail = false;
+            }
         }
     }
 }

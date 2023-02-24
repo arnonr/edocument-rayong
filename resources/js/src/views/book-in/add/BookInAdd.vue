@@ -87,6 +87,7 @@ export default {
     const toast = useToast();
     const simpleRules = ref();
     const overLay = ref(false);
+    const isDepartment = ref(true);
 
     const item = reactive({
       id: null,
@@ -299,6 +300,10 @@ export default {
         });
       }
 
+      if (item.book_in_category_id.code == 2) {
+        item.department_to = null;
+      }
+
       let dataSend = {
         title: item.title,
         book_in_category_id: item.book_in_category_id.code,
@@ -311,7 +316,8 @@ export default {
         to_send: item.to_send,
         book_in_file: item.book_in_file,
         book_in_success_file: item.book_in_success_file,
-        department_to: item.department_to.code,
+        department_to:
+          item.department_to != null ? item.department_to.code : null,
         book_to: book_to,
         book_reference: item.book_reference,
         // book_year_id: item.book_year_id.code,
@@ -361,6 +367,11 @@ export default {
         item.book_in_type_id = null;
         fetchBookTypes(value.code);
         fetchBookCode(value.code);
+        if (value.code == 1) {
+          isDepartment.value = true;
+        } else {
+          isDepartment.value = false;
+        }
         //
       }
     );
@@ -407,6 +418,7 @@ export default {
       selectOptions,
       overLay,
       book_code_latest,
+      isDepartment,
     };
   },
 };
@@ -421,6 +433,15 @@ export default {
 }
 label {
   font-size: 1rem;
+}
+
+.div-spinner {
+  bottom: 10em;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
 }
 </style>
 
@@ -662,6 +683,7 @@ label {
                 label="ฝ่ายที่เกี่ยวข้อง :"
                 label-for="department_to"
                 label-cols-md="4"
+                v-if="isDepartment"
               >
                 <validation-provider #default="{ errors }" name="Department To">
                   <v-select
@@ -780,7 +802,7 @@ label {
               </b-form-group>
             </b-col>
             <!-- submit and reset -->
-            <b-col offset-md="4">
+            <b-col offset-md="12" class="text-center">
               <b-button
                 type="submit"
                 variant="primary"
@@ -788,23 +810,24 @@ label {
               >
                 Submit
               </b-button>
+              <b-button
+                style="float: right"
+                variant="outline-info"
+                @click="
+                  $router.push({
+                    name: 'book-in-list',
+                  })
+                "
+              >
+                Back to List
+              </b-button>
             </b-col>
           </b-row>
         </b-form>
       </validation-observer>
       <template #overlay>
         <div>
-          <div
-            class="position-absolute"
-            style="
-              bottom: 10em;
-              margin-left: auto;
-              margin-right: auto;
-              left: 0;
-              right: 0;
-              text-align: center;
-            "
-          >
+          <div class="position-absolute div-spinner">
             <b-spinner type="border" variant="primary"></b-spinner>
             <br />
             <span>Please wait...</span>

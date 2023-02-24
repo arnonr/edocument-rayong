@@ -130,7 +130,7 @@ export default {
         })
         .then((response) => {
           book_code_latest.value =
-            "เลขทะเบียนรับล่าสุด : " + response.data.data.code_lastest;
+            "เลขทะเบียนรับล่าสุด : " + response.data.data.code_latest;
           // item.book_no = response.data.data.code_next;
         })
         .catch(() => {
