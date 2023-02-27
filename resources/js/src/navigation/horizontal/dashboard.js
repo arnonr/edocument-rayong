@@ -6,7 +6,7 @@ export default [
   },
   {
     title: "เว็บไซต์/Website",
-    href: "http://sci.kmutnb.ac.th",
+    href: "https://rayong.op.kmutnb.ac.th/",
     icon: "ExternalLinkIcon",
     
     resource: "Auth",
@@ -37,6 +37,20 @@ export default [
     title: "จัดการผู้ใช้งาน/User",
     route: "user-list",
     icon: "UsersIcon",
+    resource: "AdminUser",
+    action: "manage",
+  },
+  {
+    title: "เมลบุคคล/Email",
+    route: "email-person",
+    icon: "MailIcon",
+    resource: "AdminUser",
+    action: "manage",
+  },
+  {
+    title: "เมลกลุ่ม/Group",
+    route: "email-group",
+    icon: "BookIcon",
     resource: "AdminUser",
     action: "manage",
   },

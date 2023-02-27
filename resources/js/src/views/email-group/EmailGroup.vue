@@ -19,11 +19,6 @@ import {
 } from "bootstrap-vue";
 import vSelect from "vue-select";
 
-import dayjs from "dayjs";
-import "dayjs/locale/th";
-import buddhistEra from "dayjs/plugin/buddhistEra";
-dayjs.extend(buddhistEra);
-
 import {
   ref,
   watch,
@@ -33,7 +28,7 @@ import {
   computed,
 } from "@vue/composition-api";
 import store from "@/store";
-import userStoreModule from "./userStoreModule";
+import emailGroupStoreModule from "./emailGroupStoreModule";
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import Swal from "sweetalert2";
@@ -58,7 +53,6 @@ export default {
     BFormGroup,
     BPagination,
     BCardText,
-    dayjs,
     BTable,
     BForm,
     BModal,
@@ -67,11 +61,14 @@ export default {
     required,
   },
   setup() {
-    const USER_APP_STORE_MODULE_NAME = "user-list";
+    const EMAIL_GROUP_APP_STORE_MODULE_NAME = "email-group";
 
     // Register module
-    if (!store.hasModule(USER_APP_STORE_MODULE_NAME))
-      store.registerModule(USER_APP_STORE_MODULE_NAME, userStoreModule);
+    if (!store.hasModule(EMAIL_GROUP_APP_STORE_MODULE_NAME))
+      store.registerModule(
+        EMAIL_GROUP_APP_STORE_MODULE_NAME,
+        emailGroupStoreModule
+      );
 
     onUnmounted(() => {});
 
@@ -103,8 +100,7 @@ export default {
     const totalPage = ref(1);
     const totalItems = ref(0);
     const orderBy = ref({
-      title: "ชื่อ",
-      code: "firstname",
+      title: "ชื่อกลุ่ม",
     });
     const order = ref({ title: "DESC", code: "desc" });
 
@@ -115,51 +111,10 @@ export default {
         visible: false,
       },
       {
-        key: "username",
-        label: "username",
+        key: "name",
+        label: "ชื่อกลุ่ม",
         sortable: true,
         visible: true,
-        class: "text-center",
-        tdClass: "mw-3-5",
-      },
-      {
-        key: "firstname",
-        label: "ชื่อ",
-        sortable: true,
-        visible: true,
-        class: "text-center",
-        tdClass: "mw-3-5",
-      },
-      {
-        key: "lastname",
-        label: "นามสกุล",
-        sortable: true,
-        visible: true,
-        class: "text-center",
-        tdClass: "mw-3-5",
-      },
-      {
-        key: "departmentName",
-        label: "ฝ่ายงาน",
-        sortable: true,
-        visible: true,
-        class: "text-center",
-        tdClass: "mw-3-5",
-      },
-      // {
-      //   key: "email",
-      //   label: "เมล",
-      //   sortable: true,
-      //   visible: true,
-      //   class: "text-center",
-      //   tdClass: "mw-3-7",
-      // },
-      {
-        key: "type",
-        label: "ประเภท",
-        sortable: true,
-        visible: true,
-        class: "text-center",
       },
       {
         key: "action",
@@ -173,78 +128,71 @@ export default {
     const visibleFields = computed(() => fields.filter((f) => f.visible));
 
     const item = ref({
-      username: "",
-      email: "",
-      type: "",
-      firstname: "",
-      lastname: "",
-      dep_id: null,
+      name: "",
+      email_all: "",
     });
 
     const selectOptions = ref({
       perPage: [
-        { title: "1", code: 1 },
-        { title: "2", code: 2 },
-        { title: "10", code: 10 },
         { title: "20", code: 20 },
         { title: "50", code: 50 },
       ],
-      orderBy: [
-        { title: "ชื่อ", code: "firstname" },
-        { title: "username", code: "username" },
-      ],
+      orderBy: [{ title: "ชื่อกลุ่ม", code: "name" }],
       order: [
         { title: "ASC", code: "asc" },
         { title: "DESC", code: "desc" },
       ],
-      status: [
-        { title: "อนุมัติ", code: 2 },
-        { title: "บล็อก", code: 3 },
-      ],
-      type: [
-        { title: "Admin", code: "admin" },
-        { title: "Staff", code: "staff" },
-        { title: "CEO", code: "ceo" },
-        // { title: "User", code: "user" },
-      ],
-      departments: [],
+      email_persons: [],
     });
 
-    store
-      .dispatch("user-list/fetchDepartments")
-      .then((response) => {
-        const { data } = response.data;
-        selectOptions.value.departments = data.map((d) => {
-          return {
-            code: d.id,
-            title: d.name,
-          };
+    const fetchEmailPersonItems = () => {
+      store
+        .dispatch("email-group/fetchEmailPersons", {
+          perPage: 500,
+          currentPage: currentPage.value == 0 ? undefined : currentPage.value,
+          orderBy: orderBy.value.code,
+          order: order.value.code,
+        })
+        .then((response) => {
+          const { data } = response.data;
+
+          selectOptions.value.email_persons = data.map((d) => {
+            return {
+              title: d.firstname + " " + d.lastname + " (" + d.email + ")",
+              code: d.id,
+              email: d.email,
+            };
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            component: ToastificationContent,
+            props: {
+              title: "Error fetching Email Person's list",
+              icon: "AlertTriangleIcon",
+              variant: "danger",
+            },
+          });
+          isOverLay.value = false;
         });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast({
-          component: ToastificationContent,
-          props: {
-            title: "Error fetching Department's list",
-            icon: "AlertTriangleIcon",
-            variant: "danger",
-          },
-        });
-      });
+    };
+    fetchEmailPersonItems();
 
     const fetchItems = () => {
       isOverLay.value = true;
       store
-        .dispatch("user-list/fetchUsers", {
+        .dispatch("email-group/fetchEmailGroups", {
           perPage: perPage.value.code,
           currentPage: currentPage.value == 0 ? undefined : currentPage.value,
           orderBy: orderBy.value.code,
           order: order.value.code,
         })
         .then((response) => {
-          items.value = response.data.data.map((d) => {
-            d.dep_id = { title: d.departmentName, code: d.dep_id };
+          let { data } = response.data;
+          
+          items.value = data.map((d) => {
+            d.email_all = JSON.parse(d.email_all);
             return d;
           });
 
@@ -257,7 +205,7 @@ export default {
           toast({
             component: ToastificationContent,
             props: {
-              title: "Error fetching User's list",
+              title: "Error fetching Email Group's list",
               icon: "AlertTriangleIcon",
               variant: "danger",
             },
@@ -307,13 +255,13 @@ export default {
 
     const onDelete = (id) => {
       store
-        .dispatch("user-list/deleteUser", { id: id })
+        .dispatch("email-group/deleteEmailGroup", { id: id })
         .then((response) => {
           if (response.data.message == "success") {
             toast({
               component: ToastificationContent,
               props: {
-                title: "Success : Deleted User",
+                title: "Success : Deleted EmailGroup",
                 icon: "CheckIcon",
                 variant: "success",
               },
@@ -335,18 +283,14 @@ export default {
     const handleEditClick = (data) => {
       item.value = data;
 
-      item.value.type = selectOptions.value.type.find((t) => {
-        return t.code == data.type;
-      });
       isAdd.value = false;
       isModal.value = true;
     };
 
     const handleAddClick = () => {
       item.value = {
-        username: "",
-        email: "",
-        type: "",
+        name: "",
+        email_all: "",
       };
       isAdd.value = true;
       isModal.value = true;
@@ -367,53 +311,26 @@ export default {
       isOverLay.value = true;
       isSubmit.value = true;
 
+      let emailAllSend = null;
+
+      if (item.value.email_all) {
+        emailAllSend = item.value.email_all.map((x) => {
+          return {
+            title: x.title,
+            code: x.code,
+            email: x.email,
+          };
+        });
+      }
+
       let dataSend = {
-        username: item.value.username,
-        email: item.value.email,
-        type: item.value.type.code,
-        firstname: item.value.firstname,
-        lastname: item.value.lastname,
-        dep_id: item.value.dep_id.code,
+        name: item.value.name,
+        email_all: emailAllSend,
       };
 
       if (item.value.id == null) {
-        (dataSend.email = item.value.username + "@kmutnb.ac.th"),
-          store
-            .dispatch("user-list/addUser", dataSend)
-            .then(async (response) => {
-              if (response.data.message == "success") {
-                fetchItems();
-
-                isSubmit.value = false;
-                isModal.value = false;
-                isOverLay.value = false;
-
-                toast({
-                  component: ToastificationContent,
-                  props: {
-                    title: "Success : Added User",
-                    icon: "CheckIcon",
-                    variant: "success",
-                  },
-                });
-              } else {
-                isSubmit.value = false;
-                isOverLay.value = false;
-                errorToast(response.data.message);
-              }
-            })
-            .catch((error) => {
-              isSubmit.value = false;
-              isOverLay.value = false;
-
-              errorToast("Add User Error");
-            });
-      } else {
-        // Update
-        dataSend["id"] = item.value.id;
-
         store
-          .dispatch("user-list/editUser", dataSend)
+          .dispatch("email-group/addEmailGroup", dataSend)
           .then(async (response) => {
             if (response.data.message == "success") {
               fetchItems();
@@ -425,7 +342,41 @@ export default {
               toast({
                 component: ToastificationContent,
                 props: {
-                  title: "Success : Updated User",
+                  title: "Success : Added Email Group",
+                  icon: "CheckIcon",
+                  variant: "success",
+                },
+              });
+            } else {
+              isSubmit.value = false;
+              isOverLay.value = false;
+              errorToast(response.data.message);
+            }
+          })
+          .catch((error) => {
+            isSubmit.value = false;
+            isOverLay.value = false;
+
+            errorToast("Add Email Person Error");
+          });
+      } else {
+        // Update
+        dataSend["id"] = item.value.id;
+
+        store
+          .dispatch("email-group/editEmailGroup", dataSend)
+          .then(async (response) => {
+            if (response.data.message == "success") {
+              fetchItems();
+
+              isSubmit.value = false;
+              isModal.value = false;
+              isOverLay.value = false;
+
+              toast({
+                component: ToastificationContent,
+                props: {
+                  title: "Success : Updated Email Group",
                   icon: "CheckIcon",
                   variant: "success",
                 },
@@ -440,7 +391,7 @@ export default {
           .catch(() => {
             isSubmit.value = false;
             isOverLay.value = false;
-            errorToast("Update User Error");
+            errorToast("Update Email PGroup Error");
           });
       }
     };
@@ -585,7 +536,7 @@ export default {
           cancel-title="Close"
           centered
           size="lg"
-          title="User Form"
+          title="Email Form"
           :visible="isModal"
           @ok="validationForm"
           :ok-disabled="isSubmit"
@@ -601,16 +552,15 @@ export default {
               <b-form>
                 <div class="row">
                   <b-form-group
-                    label="ICITaccount"
-                    label-for="username"
+                    label="ชื่อกลุ่ม"
+                    label-for="name"
                     class="col-md"
                   >
-                    <validation-provider #default="{ errors }" name="username">
+                    <validation-provider #default="{ errors }" name="name">
                       <b-form-input
-                        id="username"
+                        id="name"
                         placeholder=""
-                        :disabled="!isAdd || true"
-                        v-model="item.username"
+                        v-model="item.name"
                         :state="errors.length > 0 ? false : null"
                       />
                       <small class="text-danger">{{ errors[0] }}</small>
@@ -618,87 +568,21 @@ export default {
                   </b-form-group>
                 </div>
                 <!--  -->
-
                 <div class="row">
                   <b-form-group
-                    label="ชื่อ/firstname:"
-                    label-for="firstname"
+                    label="อีเมล/Email:"
+                    label-for="email_all"
                     class="col-md"
                   >
-                    <validation-provider #default="{ errors }" name="firstname">
-                      <b-form-input
-                        id="firstname"
-                        placeholder=""
-                        v-model="item.firstname"
-                        :state="errors.length > 0 ? false : null"
-                      />
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-form-group>
-                </div>
-
-                <div class="row">
-                  <b-form-group
-                    label="นามสกุล/lastname:"
-                    label-for="lastname"
-                    class="col-md"
-                  >
-                    <validation-provider #default="{ errors }" name="lastname">
-                      <b-form-input
-                        id="lastname"
-                        placeholder=""
-                        v-model="item.lastname"
-                        :state="errors.length > 0 ? false : null"
-                      />
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-form-group>
-                </div>
-
-                <div class="row">
-                  <b-form-group
-                    label="ฝ่ายงาน/Department:"
-                    label-for="type"
-                    class="col-md"
-                  >
-                    <validation-provider
-                      #default="{ errors }"
-                      name="dep_id"
-                      rules="required"
-                    >
+                    <validation-provider #default="{ errors }" name="email">
                       <v-select
-                        input-id="dep_id"
-                        label="title"
-                        v-model="item.dep_id"
+                        v-model="item.email_all"
                         :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                        :options="selectOptions.departments"
-                        placeholder=""
-                        :clearable="false"
-                      />
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-form-group>
-                </div>
-
-                <div class="row">
-                  <b-form-group
-                    label="ประเภทผู้ใช้งาน/User Type:"
-                    label-for="type"
-                    class="col-md"
-                  >
-                    <validation-provider
-                      #default="{ errors }"
-                      name="type"
-                      rules="required"
-                    >
-                      <v-select
-                        input-id="type"
                         label="title"
-                        v-model="item.type"
-                        :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                        :options="selectOptions.type"
-                        placeholder=""
-                        :clearable="false"
+                        multiple
+                        taggable
+                        placeholder="-- เลือก email --"
+                        :options="selectOptions.email_persons"
                       />
                       <small class="text-danger">{{ errors[0] }}</small>
                     </validation-provider>

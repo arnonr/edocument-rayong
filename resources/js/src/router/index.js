@@ -15,6 +15,7 @@ import bookIns from "./routes/bookIns";
 import bookOuts from "./routes/bookOuts";
 import reports from "./routes/reports";
 import users from "./routes/users";
+import emails from "./routes/emails";
 Vue.use(VueRouter);
 
 const router = new VueRouter({
@@ -29,7 +30,7 @@ const router = new VueRouter({
       redirect: to => {
         // the function receives the target route as the argument
         // we return a redirect path/location here.
-        return { path: '/list'}
+        return { path: '/book-out-list'}
       },
       // name: "mou-list",
       // component: () => import("@/views/mou/MouList.vue"),
@@ -49,6 +50,7 @@ const router = new VueRouter({
     ...pages,
     ...reports,
     ...users,
+    ...emails,
     {
       path: "*",
       redirect: "error-404",

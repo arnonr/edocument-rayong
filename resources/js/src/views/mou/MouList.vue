@@ -332,7 +332,7 @@ export default {
     };
 
     const displayDateInput = (date) => {
-      return date ? dayjs(date).locale("th").format("DD/MM/BBBB") : date;
+      return date ? dayjs(date).locale("th").format("DD/MMM/BBBB") : date;
     };
 
     return {

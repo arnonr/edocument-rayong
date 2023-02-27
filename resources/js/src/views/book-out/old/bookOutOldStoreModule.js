@@ -4,7 +4,7 @@ export default {
   namespaced: true,
   state: {
     year: {
-      id: 3,
+      id: 1,
       name: "2566",
     },
   },
@@ -156,5 +156,21 @@ export default {
           .catch((error) => reject(error));
       });
     },
+    fetchUsers(ctx, queryParams) {
+      return new Promise((resolve, reject) => {
+        axios
+          .get(`/user`,{ params: queryParams })
+          .then((response) => resolve(response))
+          .catch((error) => reject(error));
+      });
+    },
+    // fetchBookCode(ctx) {
+    //   return new Promise((resolve, reject) => {
+    //     axios
+    //       .get(`/bookCode`)
+    //       .then((response) => resolve(response))
+    //       .catch((error) => reject(error));
+    //   });
+    // },
   },
 };

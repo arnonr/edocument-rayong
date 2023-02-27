@@ -310,7 +310,7 @@ h6,
           <hr />
           <span class="label">ลงวันที่ต้นทาง : </span>
           <span class="text-data font-italic">
-            {{ dayjs(item.book_from_date).locale("th").format("DD/MM/BBBB") }}
+            {{ dayjs(item.book_from_date).locale("th").format("DD/MMM/BBBB") }}
           </span>
           <hr />
           <span class="label">หน่วยงานต้นทาง : </span>
@@ -341,7 +341,7 @@ h6,
           <hr />
           <span class="label">วันที่รับเอกสาร : </span>
           <span class="text-data font-italic">
-            {{ dayjs(item.receive_date).locale("th").format("DD/MM/BBBB") }}
+            {{ dayjs(item.receive_date).locale("th").format("DD/MMM/BBBB") }}
           </span>
           <hr />
           <span class="label">เลขรับเอกสาร : </span>

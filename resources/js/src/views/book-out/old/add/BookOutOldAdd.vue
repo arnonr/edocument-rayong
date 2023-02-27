@@ -27,6 +27,7 @@ import router from "../../../../router";
 // Notification
 import { useToast } from "vue-toastification/composition";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
+import { getUserData } from "@/auth/utils";
 
 import { onUnmounted, ref, reactive, watch } from "@vue/composition-api";
 import store from "@/store";
@@ -88,13 +89,18 @@ export default {
     const simpleRules = ref();
     const overLay = ref(false);
 
+    const isAdmin = getUserData().type == "admin" ? true : false;
+    const isStaff = getUserData().type == "staff" ? true : false;
+    const isCEO = getUserData().type == "ceo" ? true : false;
+
     const item = reactive({
       id: null,
       title: "",
       book_out_category_id: null,
-      book_date: null,
       receive_date: null,
+      return_date: null,
       book_no: "",
+      book_date: null,
       to_send: "",
       book_out_file: null,
       book_out_file_old: null,
@@ -105,7 +111,8 @@ export default {
       book_reference: "",
       book_year_id: null,
       remark: "",
-      status_id: 4,
+      status_id: { title: "รอสารบรรณรับเรื่อง", code: 1 },
+      user_id: { code: getUserData().userID, title: getUserData().fullName },
       is_publish: { title: "Publish", code: 1 },
       email_group: null,
     });
@@ -119,10 +126,8 @@ export default {
           book_out_category_id: book_out_category_id,
         })
         .then((response) => {
-          console.log(response.data.data.code_lastest);
-
           book_code_latest.value =
-            "เลขทะเบียนรับล่าสุด : " + response.data.data.code_lastest;
+            "เลขทะเบียนรับล่าสุด : " + response.data.data.code_latest;
           item.book_no = response.data.data.code_next;
         })
         .catch(() => {
@@ -139,9 +144,11 @@ export default {
 
     const selectOptions = ref({
       book_out_categories: [],
-      departments: [],
-      email_groups: [],
-      emails: [],
+      // departments: [],
+      // email_groups: [],
+      // emails: [],
+      book_statuses: [],
+      users: [],
     });
 
     store
@@ -168,18 +175,14 @@ export default {
       });
 
     store
-      .dispatch("book-out-old-add/fetchDepartments")
+      .dispatch("book-out-old-add/fetchBookStatuses")
       .then((response) => {
         const { data } = response.data;
-        selectOptions.value.departments = data.map((d) => {
+        selectOptions.value.book_statuses = data.map((d) => {
           return {
             code: d.id,
             title: d.name,
           };
-        });
-        selectOptions.value.departments.unshift({
-          code: null,
-          title: "ทุกฝ่าย",
         });
       })
       .catch((error) => {
@@ -187,7 +190,7 @@ export default {
         toast({
           component: ToastificationContent,
           props: {
-            title: "Error fetching Department's list",
+            title: "Error fetching Status list",
             icon: "AlertTriangleIcon",
             variant: "danger",
           },
@@ -195,14 +198,15 @@ export default {
       });
 
     store
-      .dispatch("book-out-old-add/fetchEmailPersons")
+      .dispatch("book-out-old-add/fetchUsers", {
+        perPage: 100,
+      })
       .then((response) => {
         const { data } = response.data;
-        selectOptions.value.emails = data.map((d) => {
+        selectOptions.value.users = data.map((d) => {
           return {
             code: d.id,
-            title: d.firstname + " " + d.lastname + " (" + d.email + ")",
-            email: d.email,
+            title: d.prefix + d.firstname + " " + d.lastname,
           };
         });
       })
@@ -211,31 +215,7 @@ export default {
         toast({
           component: ToastificationContent,
           props: {
-            title: "Error fetching Email's list",
-            icon: "AlertTriangleIcon",
-            variant: "danger",
-          },
-        });
-      });
-
-    store
-      .dispatch("book-out-old-add/fetchEmailGroups")
-      .then((response) => {
-        const { data } = response.data;
-        selectOptions.value.email_groups = data.map((d) => {
-          return {
-            code: d.id,
-            title: d.name,
-            email_all: JSON.parse(d.email_all),
-          };
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast({
-          component: ToastificationContent,
-          props: {
-            title: "Error fetching Email Group's list",
+            title: "Error fetching User list",
             icon: "AlertTriangleIcon",
             variant: "danger",
           },
@@ -253,21 +233,6 @@ export default {
     const onSubmit = (ctx, callback) => {
       overLay.value = true;
 
-      let book_to = null;
-      if (item.book_to) {
-        book_to = item.book_to.map((x) => {
-          if (!x.hasOwnProperty("email")) {
-            x.email = x.title;
-            x.code = null;
-          }
-          return {
-            title: x.title,
-            code: x.code,
-            email: x.email,
-          };
-        });
-      }
-
       let dataSend = {
         title: item.title,
         book_out_category_id: item.book_out_category_id.code,
@@ -277,13 +242,12 @@ export default {
         to_send: item.to_send,
         book_out_file: item.book_out_file,
         book_out_success_file: item.book_out_success_file,
-        department_id: item.department_id.code,
-        book_to: book_to,
         book_reference: item.book_reference,
-        // book_year_id: item.book_year_id.code,
         remark: item.remark,
-        status_id: 4,
+        status_id: item.status_id.code,
+        user_id: item.user_id.code,
         is_publish: item.is_publish.code,
+        book_to: item.book_to,
       };
 
       store
@@ -313,7 +277,7 @@ export default {
           toast({
             component: ToastificationContent,
             props: {
-              title: "Add Book In Error",
+              title: "Add Book Out Error",
               icon: "AlertTriangleIcon",
               variant: "danger",
             },
@@ -325,45 +289,8 @@ export default {
     watch(
       () => item.book_out_category_id,
       (value) => {
-        // item.book_in_type_id = null;
-        // fetchBookTypes(value.code);
         fetchBookCode(value.code);
         //
-      }
-    );
-
-    watch(
-      () => item.email_group,
-      (newData) => {
-        if (newData != null) {
-          // Find Email
-          let book_to_with_group = selectOptions.value.emails.filter((x) => {
-            let email_arr = item.email_group.email_all.map((e) => {
-              return e.code;
-            });
-            let findEmail = email_arr.includes(x.code);
-            return findEmail;
-          });
-
-          // Find Duplicate
-          let book_to_with_group_filter = null;
-          if (item.book_to) {
-            book_to_with_group_filter = book_to_with_group.filter((x) => {
-              let check = item.book_to.find((e) => {
-                return x.code === e.code;
-              });
-
-              return check ? false : true;
-            });
-          } else {
-            book_to_with_group_filter = book_to_with_group;
-          }
-
-          if (item.book_to == null) {
-            item.book_to = [];
-          }
-          item.book_to = [...item.book_to, ...book_to_with_group_filter];
-        }
       }
     );
 
@@ -374,6 +301,9 @@ export default {
       selectOptions,
       overLay,
       book_code_latest,
+      isAdmin,
+      isStaff,
+      isCEO,
     };
   },
 };
@@ -388,6 +318,15 @@ export default {
 }
 label {
   font-size: 1rem;
+}
+
+.div-spinner {
+  bottom: 10em;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
 }
 </style>
 
@@ -405,78 +344,14 @@ label {
         <b-form>
           <b-row>
             <b-col cols="12" class="text-center">
-              <h2>สร้างเอกสารรับเข้า-ส่งออก</h2>
+              <h2>สร้างเอกสารออกเลข</h2>
               <hr />
             </b-col>
           </b-row>
           <b-row>
-            <!-- with prop append -->
-
-            <b-col cols="12" class="mt-2">
-              <h3>ข้อมูลต้นทาง</h3>
-              <hr />
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="เลขที่ต้นทาง :"
-                label-for="book_from_no"
-                label-cols-md="4"
-              >
-                <validation-provider #default="{ errors }" name="Book From No">
-                  <b-form-input
-                    id="book_from_no"
-                    placeholder="เลขเอกสารจากต้นทาง"
-                    v-model="item.book_from_no"
-                    :state="errors.length > 0 ? false : null"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="ลงวันที่ต้นทาง :"
-                label-for="book_from_date"
-                label-cols-md="4"
-              >
-                <validation-provider
-                  #default="{ errors }"
-                  name="Book From Date"
-                >
-                  <flat-pickr
-                    v-model="item.book_from_date"
-                    placeholder="ลงวันที่จากต้นทาง"
-                    :config="configDate"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="หน่วยงานต้นทาง :"
-                label-for="book_from"
-                label-cols-md="4"
-              >
-                <validation-provider #default="{ errors }" name="Book From">
-                  <b-form-input
-                    id="book_from"
-                    placeholder="หน่วยงานต้นทาง"
-                    v-model="item.book_from"
-                    :state="errors.length > 0 ? false : null"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
             <!-- partner group -->
             <b-col cols="12" class="mt-2">
               <h3>ข้อมูลเอกสาร</h3>
-              <hr />
             </b-col>
 
             <b-col cols="12">
@@ -498,6 +373,77 @@ label {
                     :options="selectOptions.book_out_categories"
                     placeholder="-- เลือกหมวดหมู่เอกสาร --"
                     :clearable="false"
+                  />
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </b-col>
+
+            <b-col cols="12">
+              <b-form-group
+                label="ลงวันที่ :"
+                label-for="book_date"
+                label-cols-md="4"
+              >
+                <validation-provider
+                  #default="{ errors }"
+                  name="Book Date"
+                  rules="required"
+                >
+                  <flat-pickr
+                    v-model="item.book_date"
+                    placeholder="ลงวันที่"
+                    :config="configDate"
+                  />
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </b-col>
+
+            <b-col cols="12">
+              <b-form-group
+                label="เลขที่เอกสาร"
+                label-for="book_no"
+                label-cols-md="4"
+              >
+                <validation-provider
+                  name="Book No"
+                  rules="required"
+                  #default="{ errors }"
+                >
+                  <!-- <b-input-group prepend="$" append=".00">
+                    <b-form-input></b-form-input>
+                  </b-input-group> -->
+
+                  <b-input-group :append="book_code_latest">
+                    <b-form-input
+                      id="book_no"
+                      placeholder="เลขที่เอกสาร"
+                      v-model="item.book_no"
+                    />
+                  </b-input-group>
+
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </b-col>
+
+            <b-col cols="12">
+              <b-form-group
+                label="เรียนถึง (ชื่อผู้รับในเอกสาร) :"
+                label-for="to_send"
+                label-cols-md="4"
+              >
+                <validation-provider
+                  #default="{ errors }"
+                  name="To Send"
+                  rules="required"
+                >
+                  <b-form-input
+                    id="to_send"
+                    placeholder="เรียนถึง (ชื่อผู้รับในเอกสาร)"
+                    v-model="item.to_send"
+                    :state="errors.length > 0 ? false : null"
                   />
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
@@ -528,138 +474,27 @@ label {
 
             <b-col cols="12">
               <b-form-group
-                label="เรียนถึง (ชื่อผู้รับในเอกสาร) :"
-                label-for="to_send"
+                label="ผู้รับผิดชอบ :"
+                label-for="user_id"
                 label-cols-md="4"
               >
                 <validation-provider
                   #default="{ errors }"
-                  name="To Send"
+                  name="user_id"
                   rules="required"
                 >
-                  <b-form-input
-                    id="to_send"
-                    placeholder="เรียนถึง (ชื่อผู้รับในเอกสาร)"
-                    v-model="item.to_send"
-                    :state="errors.length > 0 ? false : null"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <!--  -->
-            <b-col cols="12">
-              <b-form-group
-                label="วันที่รับเอกสาร :"
-                label-for="receive_date"
-                label-cols-md="4"
-              >
-                <validation-provider
-                  #default="{ errors }"
-                  name="Receive Date"
-                  rules="required"
-                >
-                  <flat-pickr
-                    v-model="item.receive_date"
-                    placeholder="วันที่รับเอกสาร"
-                    :config="configDate"
-                  />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <!-- เลชรับ -->
-            <b-col cols="12">
-              <b-form-group
-                label="เลขรับเอกสาร"
-                label-for="book_no"
-                label-cols-md="4"
-              >
-                <validation-provider
-                  name="Book No"
-                  rules="required"
-                  #default="{ errors }"
-                >
-                  <!-- <b-input-group prepend="$" append=".00">
-                    <b-form-input></b-form-input>
-                  </b-input-group> -->
-
-                  <b-input-group :append="book_code_latest">
-                    <b-form-input
-                      id="book_no"
-                      placeholder="เลขรับเอกสาร"
-                      v-model="item.book_no"
-                    />
-                  </b-input-group>
-
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="ฝ่ายที่เกี่ยวข้อง :"
-                label-for="department_to"
-                label-cols-md="4"
-              >
-                <validation-provider #default="{ errors }" name="Department To">
                   <v-select
-                    v-model="item.department_to"
-                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                    input-id="department_to"
+                    input-id="user_id"
                     label="title"
-                    :options="selectOptions.departments"
-                    placeholder="-- เลือกฝ่ายที่เกี่ยวข้อง --"
+                    v-model="item.user_id"
+                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
+                    placeholder="-- เลือกผู้รับผิดชอบ --"
+                    :options="selectOptions.users"
+                    :disabled="isAdmin ? false : true"
+                    :clearable="false"
                   />
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
-              </b-form-group>
-            </b-col>
-
-            <b-col cols="12">
-              <b-form-group
-                label="ผู้ที่เกี่ยวข้อง (ส่งเมล)"
-                label-for="book_to"
-                label-cols-md="4"
-              >
-                <b-row>
-                  <b-col cols="12">
-                    <validation-provider name="Book To" #default="{ errors }">
-                      <v-select
-                        v-model="item.book_to"
-                        :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                        label="title"
-                        multiple
-                        taggable
-                        :options="selectOptions.emails"
-                        placeholder="-- เลือกผู้ที่เกี่ยวข้อง (ได้มากกว่า 1) --"
-                      />
-                      <small class="text-danger">{{ errors[0] }}</small>
-                    </validation-provider>
-                  </b-col>
-                  <b-col cols="2" class="mt-2">
-                    <b-button
-                      type="button"
-                      variant="danger"
-                      @click.prevent="item.book_to = ''"
-                      class="mr-1"
-                    >
-                      Clear
-                    </b-button>
-                  </b-col>
-                  <b-col cols="10" class="mt-2">
-                    <v-select
-                      v-model="item.email_group"
-                      :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
-                      label="title"
-                      :options="selectOptions.email_groups"
-                      placeholder="-- เลือกจากกลุ่ม --"
-                    />
-                  </b-col>
-                </b-row>
               </b-form-group>
             </b-col>
 
@@ -687,7 +522,11 @@ label {
                 label-for="book_out_file"
                 label-cols-md="4"
               >
-                <validation-provider name="book_out_file" #default="{ errors }">
+                <validation-provider
+                  name="book_out_file"
+                  #default="{ errors }"
+                  rules="required"
+                >
                   <b-form-file
                     id="book_out_file"
                     v-model="item.book_out_file"
@@ -721,6 +560,26 @@ label {
                 </validation-provider>
               </b-form-group>
             </b-col>
+
+            <b-col cols="12" v-if="isAdmin">
+              <b-form-group
+                label="สถานะ"
+                label-for="status_id"
+                label-cols-md="4"
+              >
+                <validation-provider name="status_id" #default="{ errors }">
+                  <v-select
+                    v-model="item.status_id"
+                    :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
+                    label="title"
+                    placeholder="-- เลือกสถานะ --"
+                    :options="selectOptions.book_statuses"
+                  />
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+            </b-col>
+
             <!-- submit and reset -->
             <b-col offset-md="12" class="text-center">
               <b-button
@@ -730,7 +589,6 @@ label {
               >
                 Submit
               </b-button>
-
 
               <b-button
                 style="float: right"
@@ -746,17 +604,7 @@ label {
       </validation-observer>
       <template #overlay>
         <div>
-          <div
-            class="position-absolute"
-            style="
-              bottom: 10em;
-              margin-left: auto;
-              margin-right: auto;
-              left: 0;
-              right: 0;
-              text-align: center;
-            "
-          >
+          <div class="position-absolute div-spinner">
             <b-spinner type="border" variant="primary"></b-spinner>
             <br />
             <span>Please wait...</span>

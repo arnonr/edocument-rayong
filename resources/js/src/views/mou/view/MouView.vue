@@ -676,12 +676,12 @@ h6,
           <hr />
           <span class="label">วันเริ่มสัญญา/Start Date : </span>
           <span class="text-data">{{
-            dayjs(item.start_date).locale("th").format("DD/MM/BBBB")
+            dayjs(item.start_date).locale("th").format("DD/MMM/BBBB")
           }}</span>
           <hr />
           <span class="label">วันสิ้นสุดสัญญา/End Date : </span>
           <span class="text-data">{{
-            dayjs(item.end_date).locale("th").format("DD/MM/BBBB")
+            dayjs(item.end_date).locale("th").format("DD/MMM/BBBB")
           }}</span>
           <hr />
           <span class="label">หมายเหตุ : </span>
@@ -715,11 +715,11 @@ h6,
             responsive
           >
             <template #cell(start_date)="data">
-              {{ dayjs(data.start_date).locale("th").format("DD/MM/BBBB") }}
+              {{ dayjs(data.start_date).locale("th").format("DD/MMM/BBBB") }}
             </template>
 
             <template #cell(end_date)="data">
-              {{ dayjs(data.end_date).locale("th").format("DD/MM/BBBB") }}
+              {{ dayjs(data.end_date).locale("th").format("DD/MMM/BBBB") }}
             </template>
 
             <template #cell(activity_file)="row">

@@ -194,19 +194,25 @@ class AuthController extends Controller
                 $this->errorMessage = 'API Error ' . print_r($response, true);
             }else if($json_data['api_status'] == 'success'){
                 // $userDB = User::where('icit_name', $json_data['userInfo']['displayname'])->first();
-                $userDB = User::where('username', $username)->first();
-                
+
+                $nameArray = explode(" ", $json_data['userInfo']['displayname']);
+                $lastname = '';
+                for($i = 0; $i < count($nameArray); $i++) {
+                    if($i != 0){
+                        $lastname = $lastname . " " . $nameArray[$i];
+                    }
+                }
+                $userDB = User::where('deleted_at', null)->where(function ($query) use ($username, $nameArray,$lastname) {
+                    $query->orWhere('username', $username)->orWhere('firstname', $nameArray[0])->orWhere('lastname', $lastname);
+                })  ->first();
+
+                // var_dump($userDB);
+                // exit;
                 // New User
                 if(!$userDB){
                     $this->errorCode = self::ERROR_INVALID_CREDENTIALS;
                     $this->errorMessage = "ไม่มีสิทธิ์เข้าใช้งาน";
-                    // $nameArray = explode(" ", $json_data['userInfo']['displayname']);
-                    // $lastname = '';
-                    // for($i = 0; $i < count($nameArray); $i++) {
-                    //     if($i != 0){
-                    //         $lastname = $lastname . " " . $nameArray[$i];
-                    //     }
-                    // }
+                   
 
                     // $userDB = new User;
                     // $userDB->pid = $json_data['userInfo']['pid'];

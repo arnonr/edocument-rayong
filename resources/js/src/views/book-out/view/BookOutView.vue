@@ -96,6 +96,7 @@ export default {
 
     const toast = useToast();
     const isAdmin = getUserData().type == "admin" ? true : false;
+    const isCEO = getUserData().type == "ceo" ? true : false;
     const isStaff = getUserData().type == "staff" ? true : false;
     const overLay = ref(false);
     const simpleRules = ref();
@@ -304,7 +305,7 @@ h6,
           <hr />
           <span class="label">ลงวันที่ : </span>
           <span class="text-data font-italic">
-            {{ dayjs(item.book_date).locale("th").format("DD/MM/BBBB") }}
+            {{ dayjs(item.book_date).locale("th").format("DD/MMM/BBBB") }}
           </span>
           <hr />
           <span class="label">เลขที่เอกสาร : </span>
@@ -394,7 +395,7 @@ h6,
                 params: { id: item.id },
               })
             "
-            v-if="isAdmin || isStaff"
+            v-if="isAdmin || item.status_id == 1"
           >
             แก้ไขเอกสาร</b-button
           >

@@ -142,6 +142,7 @@ class UserController extends Controller
             'department.name as departmentName',
         )
         ->where('users.active', 1)
+        ->where('users.deleted_at',null)
         ->leftJoin('department','users.dep_id','=','department.id');
 
         if ($request->id) {
@@ -182,6 +183,9 @@ class UserController extends Controller
 
         $data = new User;
         $data->username = $request->username;
+        $data->firstname = $request->firstname;
+        $data->lastname = $request->lastname;
+        $data->dep_id = $request->dep_id;
         $data->email = $request->email;
         $data->type = $request->type;
         $data->save();
@@ -206,6 +210,9 @@ class UserController extends Controller
 
         $data->email = $request->email;
         $data->type = $request->type;
+        $data->firstname = $request->firstname;
+        $data->lastname = $request->lastname;
+        $data->dep_id = $request->dep_id;
         $data->save();
 
         $responseData = [

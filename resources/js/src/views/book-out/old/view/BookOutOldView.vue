@@ -96,10 +96,9 @@ export default {
 
     const toast = useToast();
     const isAdmin = getUserData().type == "admin" ? true : false;
+    const isCEO = getUserData().type == "ceo" ? true : false;
     const isStaff = getUserData().type == "staff" ? true : false;
     const overLay = ref(false);
-    const isActivityModal = ref(false);
-    const isActivitySubmit = ref(false);
     const simpleRules = ref();
 
     const errorToast = (message) => {
@@ -117,7 +116,7 @@ export default {
       toast({
         component: ToastificationContent,
         props: {
-          title: "Added Book In",
+          title: "Added Book Out",
           icon: "CheckIcon",
           variant: "success",
         },
@@ -130,7 +129,7 @@ export default {
       toast({
         component: ToastificationContent,
         props: {
-          title: "Updated Book In",
+          title: "Updated Book Out",
           icon: "CheckIcon",
           variant: "success",
         },
@@ -147,17 +146,7 @@ export default {
       })
       .then((response) => {
         const { data } = response.data;
-        //
-        let book_to = "";
-        if (data.book_to != null) {
-          let bookJson = JSON.parse(data.book_to);
-          book_to = bookJson.map((b) => {
-            return b.title;
-          });
 
-          book_to = book_to.toString();
-        }
-        data.book_to = book_to;
         item.value = data;
       })
       .catch((error) => {
@@ -165,7 +154,7 @@ export default {
         toast({
           component: ToastificationContent,
           props: {
-            title: "Error Get Book In Information",
+            title: "Error Get Book Out Information",
             icon: "AlertTriangleIcon",
             variant: "danger",
           },
@@ -286,29 +275,8 @@ h6,
     >
       <b-row>
         <b-col class="text-center mt-2">
-          <h3>ข้อมูลเอกสารรับเข้า-ส่งออก</h3>
+          <h3>ข้อมูลเอกสารออกเลข</h3>
           <hr width="80px;" style="border: solid 2px; border-color: #fe7300" />
-        </b-col>
-      </b-row>
-
-      <b-row>
-        <b-col class="pt-1 pb-1 mb-2 mt-4" style="background-color: #eee">
-          <h4>ข้อมูลต้นทาง</h4>
-        </b-col>
-      </b-row>
-
-      <b-row>
-        <b-col>
-          <span class="label">เลขที่ต้นทาง : </span>
-          <span class="text-data font-italic">{{ item.book_from_no }}</span>
-          <hr />
-          <span class="label">ลงวันที่ต้นทาง : </span>
-          <span class="text-data font-italic">
-            {{ dayjs(item.book_from_date).locale("th").format("DD/MM/BBBB") }}
-          </span>
-          <hr />
-          <span class="label">หน่วยงานต้นทาง : </span>
-          <span class="text-data font-italic">{{ item.book_from }}</span>
         </b-col>
       </b-row>
 
@@ -328,30 +296,27 @@ h6,
             item.book_out_category_name
           }}</span>
           <hr />
-          <span class="label">วันที่รับเอกสาร : </span>
+          <span class="label">ลงวันที่ : </span>
           <span class="text-data font-italic">
-            {{ dayjs(item.receive_date).locale("th").format("DD/MM/BBBB") }}
+            {{ dayjs(item.book_date).locale("th").format("DD/MMM/BBBB") }}
           </span>
           <hr />
-          <span class="label">เลขรับเอกสาร : </span>
+          <span class="label">เลขที่เอกสาร : </span>
           <span class="text-data font-italic">{{ item.book_no }}</span>
           <hr />
           <span class="label">เรียนถึง (ชื่อผู้รับในเอกสาร) : </span>
           <span class="text-data font-italic">{{ item.to_send }}</span>
           <hr />
-          <span class="label">หน่วยงานที่เกี่ยวข้อง : </span>
-          <span class="text-data font-italic">{{
-            item.department_name ? item.department_name : "ทุกฝ่าย"
-          }}</span>
+          <span class="label">ผู้รับผิดชอบ : </span>
+          <span class="text-data font-italic">{{ item.fullname }}</span>
           <hr />
-          <span class="label">ส่งเมล : </span>
+          <span class="label">สถานะ : </span>
           <span class="text-data font-italic">
-            {{ item.book_to }}
+            <b-badge :variant="item.status_color">
+              {{ item.status_name }}
+            </b-badge>
           </span>
           <hr />
-          <!-- <span class="label">อ้างถึงเลขรับเอกสาร : </span>
-          <span class="text-data font-italic">{{ item.book_reference }}</span>
-          <hr /> -->
           <span class="label">ปี : </span>
           <span class="text-data font-italic">{{ item.book_year_name }}</span>
           <hr />
@@ -366,11 +331,9 @@ h6,
           <span class="label">ไฟล์ : </span>
           <span class="text-data">
             <b-button
-              :disabled="
-                (isAdmin || isStaff) && item.book_out_file != null ? false : true
-              "
+              :disabled="item.book_out_file != null ? false : true"
               :variant="
-                (isAdmin || isStaff) && item.book_out_file != null
+                item.book_out_file != null
                   ? 'outline-success'
                   : 'outline-secondary'
               "
@@ -386,13 +349,9 @@ h6,
             </b-button>
             |
             <b-button
-              :disabled="
-                (isAdmin || isStaff) && item.book_out_success_file != null
-                  ? false
-                  : true
-              "
+              :disabled="item.book_out_success_file != null ? false : true"
               :variant="
-                (isAdmin || isStaff) && item.book_out_success_file != null
+                item.book_out_success_file != null
                   ? 'outline-warning'
                   : 'outline-secondary'
               "
@@ -411,7 +370,7 @@ h6,
       </b-row>
 
       <b-row>
-        <b-col class="mt-12 text-center">
+        <b-col class="mt-12 text-center" v-if="isAdmin || isStaff">
           <b-button
             type="button"
             variant="outline-success"
@@ -424,7 +383,7 @@ h6,
                 },
               })
             "
-            v-if="isAdmin || isStaff"
+            v-if="isAdmin || item.status_id == 1"
           >
             แก้ไขเอกสาร</b-button
           >
@@ -442,7 +401,7 @@ h6,
             variant="outline-info"
             @click="
               $router.push({
-                name: 'book-out-old',
+                name: 'book-in-old',
                 query: {
                   book_year_id: $router.currentRoute.query.book_year_id,
                 },

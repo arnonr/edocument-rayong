@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\BookOut;
+use App\Models\User;
 use App\Models\BookYear;
 use App\Models\BookStatus;
 use Validator;
@@ -119,14 +120,14 @@ class BookOutController extends Controller
             $items->where('book_out.status_id',$request->status_id);
         }
 
-        if ($request->start_receive_date) {
-            $startDate = Carbon::createFromFormat('Y-m-d', $request->start_receive_date);
-            $items->whereDate('book_out.receive_date','>=', $startDate);
+        if ($request->start_book_date) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->start_book_date);
+            $items->whereDate('book_out.book_date','>=', $startDate);
         }
 
-        if ($request->end_receive_date) {
-            $endDate = Carbon::createFromFormat('Y-m-d', $request->end_receive_date);
-            $items->whereDate('book_out.receive_date','<=', $endDate);
+        if ($request->end_book_date) {
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->end_book_date);
+            $items->whereDate('book_out.book_date','<=', $endDate);
         }
 
         $order_by = $request->orderBy ? $request->orderBy : 'id';
@@ -239,6 +240,7 @@ class BookOutController extends Controller
         // Check Book No Duplicate.
         $book_out = BookOut::where('book_no', $request->book_no)
             ->where('book_out_category_id', $request->book_out_category_id)
+            ->where('book_year_id', $book_year->id)
             ->where('deleted_at', null)
             ->first();
 
@@ -312,10 +314,16 @@ class BookOutController extends Controller
         $data->created_by = 'arnonr';
         $data->save();
 
-        if($request->book_to != 'null'){
-            foreach(json_decode($request->book_to, true) as $key => $value){
-                $this->sendMail($value['email'], $data);
-            }
+        // if($request->book_to != 'null'){
+        //     foreach(json_decode($request->book_to, true) as $key => $value){
+        //         $this->sendMail($value['email'], $data);
+        //     }
+        // }
+
+        if(($path_success_file != null) && ($data->status_id == 4)){
+            $user = User::where('id',$data->user_id)->first();
+            // email
+            $this->sendMail($user->email, $data);
         }
 
         $responseData = [
@@ -361,6 +369,7 @@ class BookOutController extends Controller
         // Check Book No Duplicate.
         $book_out = BookOut::where('book_no', $request->book_no)
             ->where('book_out_category_id', $request->book_out_category_id)
+            ->where('book_year_id', $book_year->id)
             ->where('id','!=', $id)
             ->where('deleted_at', null)
             ->first();
@@ -435,13 +444,17 @@ class BookOutController extends Controller
         $data->created_by = 'arnonr';
         $data->save();
 
-        if(($request->is_send_email == true) && ($request->is_send_email != 'undefined')){
-            if($request->book_to != 'null'){
-                foreach(json_decode($request->book_to, true) as $key => $value){
-                    $this->sendMail($value['email'], $data);
-                }
-            }
-        }   
+        if(($path_success_file != null) && ($data->status_id == 4)){
+        
+            if($request->is_send_email == "true"){
+                
+                $user = User::where('id', $data->user_id)->first();
+                // email
+                $this->sendMail($user->email, $data);
+                
+            }   
+        }
+            
 
         $responseData = [
             'message' => 'success',
@@ -576,23 +589,23 @@ class BookOutController extends Controller
 
         $details = [
             'title' => $data->title,
-            'body' => '
+            'body' => 'เอกสารของท่านได้รับการอนุมัติเรียบร้อยแล้ว<br>
             เรื่อง : '.$data->title.'<br>
             จาก : '.$data->book_from.'<br>
             วันที่รับ : '.$date_receive.'<br>
-            ไฟล์เอกสาร: <a href="'.$this->uploadUrl.$data-out_file.'">เปิดไฟล์</a>'
+            ไฟล์ฉบับสมบูรณ์: <a href="'.$this->uploadUrl.$data->book_out_success_file.'">เปิดไฟล์</a>'
         ];
 
          // ไฟล์เอกสาร: <a href="'.env('APP_URL').'http://edoc.fba.kmutnb.ac.th/storage'.$data->file.'">เปิดไฟล์</a>'
         // ไฟล์เอกสาร: <a href="'.env('APP_URL').'storage'.$data->file.'">เปิดไฟล์</a>'
         // var_dump($data->file);
-        $file1 = public_path($data->book_out_file);
+        $file1 = public_path($data->book_out_success_file);
 
         try {
             // \Mail::to($email)->send(new \App\Mail\MyMail($details, $data->title, $template, $data->file), $details, function($message)use($details , $data, $file1, $email) {
             //     $message->to($email)->subject($data->title)->attach($file1);
             // });
-            \Mail::to($email)->send(new \App\Mail\MyMail($details, $data->title, $template, $data->book_out_file));
+            \Mail::to($email)->send(new \App\Mail\MyMail($details, $data->title, $template, $data->book_out_success_file));
         } catch (Throwable $e) {
             $sendmail = false;
         }

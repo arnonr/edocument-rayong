@@ -4,26 +4,26 @@ export default {
   namespaced: true,
   getters: {},
   actions: {
-    fetchUsers(ctx, queryParams) {
+    fetchEmailPersons(ctx, queryParams) {
       return new Promise((resolve, reject) => {
         axios
-          .get("/user", { params: queryParams })
+          .get("/email/person", { params: queryParams })
           .then((response) => resolve(response))
           .catch((error) => reject(error));
       });
     },
-    fetchUser(ctx, { id }) {
+    fetchEmailPerson(ctx, { id }) {
       return new Promise((resolve, reject) => {
         axios
-          .get(`/user/${id}`)
+          .get(`/email/person/${id}`)
           .then((response) => resolve(response))
           .catch((error) => reject(error));
       });
     },
-    addUser(ctx, dataSend) {
+    addEmailPerson(ctx, dataSend) {
       return new Promise((resolve, reject) => {
         axios
-          .post("/user", dataSend)
+          .post("/email/person", dataSend)
           .then((response) => {
             return resolve(response);
           })
@@ -31,10 +31,10 @@ export default {
       });
     },
 
-    editUser(ctx, dataSend) {
+    editEmailPerson(ctx, dataSend) {
       return new Promise((resolve, reject) => {
         axios
-          .put(`/user/${dataSend.id}`, dataSend)
+          .put(`/email/person/${dataSend.id}`, dataSend)
           .then((response) => {
             return resolve(response);
           })
@@ -42,21 +42,13 @@ export default {
       });
     },
 
-    deleteUser(ctx, { id }) {
+    deleteEmailPerson(ctx, { id }) {
       return new Promise((resolve, reject) => {
         axios
-          .delete(`/user/${id}`)
+          .delete(`/email/person/${id}`)
           .then((response) => {
             return resolve(response);
           })
-          .catch((error) => reject(error));
-      });
-    },
-    fetchDepartments(ctx, queryParams) {
-      return new Promise((resolve, reject) => {
-        axios
-          .get(`/department`, { params: queryParams })
-          .then((response) => resolve(response))
           .catch((error) => reject(error));
       });
     },

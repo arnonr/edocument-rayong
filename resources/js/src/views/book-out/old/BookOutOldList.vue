@@ -16,6 +16,7 @@ import {
   BTable,
   BModal,
   BForm,
+  BBadge,
 } from "bootstrap-vue";
 import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
@@ -28,10 +29,10 @@ import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 
 import * as XLSX from "xlsx/xlsx";
+// import XLSX from "xlsx";
 
 import {
   ref,
-  watch,
   watchEffect,
   reactive,
   onUnmounted,
@@ -72,6 +73,7 @@ export default {
     BTable,
     BModal,
     BForm,
+    BBadge,
   },
   data() {
     return {
@@ -98,6 +100,8 @@ export default {
 
     // UnRegister on leave
     onUnmounted(() => {
+      // if (store.hasModule(BOOK_OUT_APP_STORE_MODULE_NAME))
+      // store.unregisterModule(BOOK_OUT_APP_STORE_MODULE_NAME);
     });
 
     const toast = useToast();
@@ -124,29 +128,34 @@ export default {
     const totalPage = ref(1);
     const totalItems = ref(0);
     const orderBy = ref({
-      title: "วันที่รับเอกสาร",
-      code: "receive_date",
+      title: "ลงวันที่",
+      code: "book_date",
     });
     const order = ref({ title: "มาก -> น้อย", code: "desc" });
 
     const advancedSearch = reactive({
       title: "",
       book_out_category_id: null,
-      receive_date: null,
       book_no: "",
+      book_date: null,
+      receive_date: null,
+      status_id: null,
       to_send: "",
       department_id: null,
+      user_id: null,
       book_year_id: null,
     });
 
     const resetAdvancedSearch = () => {
       advancedSearch.title = "";
       advancedSearch.book_out_category_id = null;
-      advancedSearch.receive_date = null;
       advancedSearch.book_no = "";
+      advancedSearch.book_date = null;
+      advancedSearch.receive_date = null;
+      advancedSearch.status_id = null;
       advancedSearch.to_send = "";
       advancedSearch.department_id = null;
-      // advancedSearch.year = null;
+      advancedSearch.user_id = null;
     };
 
     const exportXLS = reactive({
@@ -162,8 +171,8 @@ export default {
         visible: false,
       },
       {
-        key: "receive_date",
-        label: "วันที่รับ",
+        key: "book_out_category_name",
+        label: "หมวดหมู่",
         sortable: true,
         visible: true,
         class: "text-center",
@@ -173,7 +182,7 @@ export default {
       },
       {
         key: "book_no",
-        label: "เลขรับ",
+        label: "เลขที่",
         sortable: true,
         visible: true,
         class: "text-center",
@@ -189,8 +198,28 @@ export default {
         class: "text-left",
       },
       {
-        key: "book_out_category_name",
-        label: "หมวดหมู่",
+        key: "fullname",
+        label: "ผู้รับผิดชอบ",
+        sortable: true,
+        visible: true,
+        class: "text-center",
+        thStyle: {
+          width: "200px",
+        },
+      },
+      {
+        key: "book_date",
+        label: "ลงวันที่",
+        sortable: true,
+        visible: true,
+        class: "text-center",
+        thStyle: {
+          width: "150px",
+        },
+      },
+      {
+        key: "status_name",
+        label: "สถานะ",
         sortable: true,
         visible: true,
         class: "text-center",
@@ -199,23 +228,13 @@ export default {
         },
       },
       {
-        key: "book_from",
-        label: "หน่วยงาน (ต้นทาง)",
-        sortable: true,
-        visible: true,
-        class: "text-left",
-        thStyle: {
-          width: "300px",
-        },
-      },
-      {
-        key: "to_send",
-        label: "เรียนถึง",
+        key: "book_out_file",
+        label: "ไฟล์ต้นฉบับ",
         sortable: true,
         visible: true,
         class: "text-center",
         thStyle: {
-          width: "100px",
+          width: "150px",
         },
       },
       {
@@ -228,6 +247,16 @@ export default {
           width: "150px",
         },
       },
+      // {
+      //   key: "to_send",
+      //   label: "เรียนถึง",
+      //   sortable: true,
+      //   visible: true,
+      //   class: "text-center",
+      //   thStyle: {
+      //     width: "100px",
+      //   },
+      // },
       {
         key: "action",
         label: "จัดการ",
@@ -250,35 +279,36 @@ export default {
         { title: "60", code: 60 },
       ],
       orderBy: [
-        { title: "วันที่รับเอกสาร", code: "receive_date" },
-        { title: "เลขรับเอกสาร", code: "book_no" },
+        { title: "หมวดหมู่", code: "book_out_category_id" },
+        { title: "เลขที่เอกสาร", code: "book_no" },
         { title: "ชื่อเรื่อง", code: "title" },
-        { title: "หมวดหมู่", code: "book_category_id" },
-        { title: "ประเภท", code: "book_type_id" },
-        { title: "หน่วยงาน (ต้นทาง)", code: "book_from" },
-        { title: "เรียนถึง (ชื่อผู้รับในเอกสาร)", code: "to_send" },
+        // { title: "ประเภท", code: "book_type_id" },
+        { title: "ลงวันที่", code: "book_date" },
+        { title: "สถานะ", code: "status_id" },
       ],
       order: [
         { title: "น้อย -> มาก", code: "asc" },
         { title: "มาก -> น้อย", code: "desc" },
       ],
       book_years: [],
+      users: [],
+      book_statuses: [],
     });
 
     // const yearSelect = dayjs().locale("th").format("BBBB");
-    // selectOptions.value.book_years.push({
+    // selectOptions.value.years.push({
     //   title: String(yearSelect),
     //   code: String(yearSelect),
     // });
     // for (let i = 1; i <= 9; i++) {
-    //   selectOptions.value.book_years.push({
+    //   selectOptions.value.years.push({
     //     title: String(parseInt(yearSelect) - i),
     //     code: String(parseInt(yearSelect) - i),
     //   });
     // }
 
     store
-      .dispatch("book-out-old/fetcOutCategories")
+      .dispatch("book-out-old/fetchBookOutCategories")
       .then((response) => {
         const { data } = response.data;
         selectOptions.value.book_out_categories = data.map((d) => {
@@ -300,8 +330,6 @@ export default {
         });
       });
 
-  
-
     store
       .dispatch("book-out-old/fetchDepartments")
       .then((response) => {
@@ -319,6 +347,56 @@ export default {
           component: ToastificationContent,
           props: {
             title: "Error fetching Department's list",
+            icon: "AlertTriangleIcon",
+            variant: "danger",
+          },
+        });
+      });
+
+    store
+      .dispatch("book-out-old/fetchUsers", {
+        perPage: 100,
+      })
+      .then((response) => {
+        const { data } = response.data;
+        selectOptions.value.users = data.map((d) => {
+          return {
+            code: d.id,
+            title: d.prefix + d.firstname + " " + d.lastname,
+          };
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          component: ToastificationContent,
+          props: {
+            title: "Error fetching User's list",
+            icon: "AlertTriangleIcon",
+            variant: "danger",
+          },
+        });
+      });
+
+    store
+      .dispatch("book-out-old/fetchBookStatuses", {
+        perPage: 100,
+      })
+      .then((response) => {
+        const { data } = response.data;
+        selectOptions.value.book_statuses = data.map((d) => {
+          return {
+            code: d.id,
+            title: d.name,
+          };
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          component: ToastificationContent,
+          props: {
+            title: "Error fetching User's list",
             icon: "AlertTriangleIcon",
             variant: "danger",
           },
@@ -360,6 +438,7 @@ export default {
 
     const fetchItems = () => {
       let search = { ...advancedSearch };
+
       if (search.book_out_category_id) {
         if (search.book_out_category_id.hasOwnProperty("code")) {
           search.book_out_category_id = search.book_out_category_id.code;
@@ -372,17 +451,27 @@ export default {
         }
       }
 
+      if (search.user_id) {
+        if (search.user_id.hasOwnProperty("code")) {
+          search.user_id = search.user_id.code;
+        }
+      }
+
+      if (search.status_id) {
+        if (search.status_id.hasOwnProperty("code")) {
+          search.status_id = search.status_id.code;
+        }
+      }
+
+      if (isStaff) {
+        search.user_id = getUserData().userID;
+      }
+
       if (search.book_year_id) {
         if (search.book_year_id.hasOwnProperty("code")) {
           search.book_year_id = search.book_year_id.code;
         }
       }
-
-      // if (search.is_publish) {
-      //   if (search.is_publish.hasOwnProperty("code")) {
-      //     search.is_publish = search.is_publish.code;
-      //   }
-      // }
 
       isOverLay.value = true;
       store
@@ -415,27 +504,6 @@ export default {
     };
     // fetchItems();
 
-    // watch(
-    //   () => advancedSearch.type,
-    //   (value) => {
-    //     if (value) {
-    //       if (value.code == 1) {
-    //         advancedSearch.country_code = { title: "ไทย", code: "THA" };
-    //       } else {
-    //         advancedSearch.country_code = {
-    //           title: "-- All Country --",
-    //           code: null,
-    //         };
-    //       }
-    //     } else {
-    //       advancedSearch.country_code = {
-    //         title: "-- All Country --",
-    //         code: null,
-    //       };
-    //     }
-    //   }
-    // );
-
     watchEffect(() => {
       if (advancedSearch.book_year_id != null) {
         fetchItems();
@@ -447,7 +515,7 @@ export default {
     };
 
     const displayDateInput = (date) => {
-      return date ? dayjs(date).locale("th").format("DD/MM/BBBB") : date;
+      return date ? dayjs(date).locale("th").format("DD/MMM/BBBB") : date;
     };
 
     const onExportExcel = async () => {
@@ -455,12 +523,8 @@ export default {
         errorToast("โปรดระบุปี");
         return;
       }
-      console.log(exportXLS.book_out_category_id);
-      if (
-        exportXLS.book_out_category_id == "" ||
-        exportXLS.end_date == "" ||
-        exportXLS.start_date == ""
-      ) {
+
+      if (exportXLS.end_date == "" || exportXLS.start_date == "") {
         errorToast("โปรดระบุข้อมูลให้ครบถ้วน");
         return;
       }
@@ -469,7 +533,6 @@ export default {
         .dispatch("book-out-old/fetchBookOuts", {
           start_receive_date: exportXLS.start_date,
           end_receive_date: exportXLS.end_date,
-          book_out_category_id: exportXLS.book_out_category_id.code,
           book_year_id: advancedSearch.book_year_id.code,
         })
         .then((response) => {
@@ -500,6 +563,12 @@ export default {
           XLSX.writeFile(wb, "export.xlsx");
 
           return;
+
+          // const { data, totalData, totalPage } = response.data;
+          // items.value = response.data.data;
+          // totalPage.value = response.data.totalPage;
+          // totalItems.value = response.data.totalData;
+          // isOverLay.value = false;
         })
         .catch((error) => {
           console.log(error);
@@ -512,6 +581,58 @@ export default {
             },
           });
         });
+
+      // dayjs.extend(isBetween);
+      // // dayjs.extend(isSame)
+
+      // let exportExcel = items.value.filter((x) => {
+      //   if (
+      //     dayjs(x.receive_date).isBetween(
+      //       exportXLS.start_date,
+      //       exportXLS.end_date
+      //     )
+      //   ) {
+      //     return true;
+      //   } else {
+      //     let start = dayjs(x.receive_date).isSame(exportXLS.start_date);
+      //     let end = dayjs(x.receive_date).isSame(exportXLS.end_date);
+
+      //     // console.log(start)
+      //     // console.log(x.date_receive)
+
+      //     if (start == true || end == true) {
+      //       return true;
+      //     } else {
+      //       return false;
+      //     }
+      //   }
+      // });
+
+      // let exportExcels = exportExcel.map((x) => {
+      //   return {
+      //     วันที่สารบรรณรับเรื่อง: dayjs(x.receive_date)
+      //       .locale("th")
+      //       .format("DD MMM BB"),
+      //     เลขรับ: x.book_no,
+      //     เรื่อง: x.title,
+      //     วันที่รับเอกสาร: "",
+      //     ผู้รับเอกสาร: "",
+      //   };
+      // });
+
+      // const dataWS = XLSX.utils.json_to_sheet(exportExcels);
+
+      // dataWS["!cols"] = [
+      //   { width: 20 },
+      //   { width: 20 },
+      //   { width: 100 },
+      //   { width: 20 },
+      //   { width: 20 },
+      // ];
+
+      // const wb = XLSX.utils.book_new();
+      // XLSX.utils.book_append_sheet(wb, dataWS);
+      // XLSX.writeFile(wb, "export.xlsx");
     };
 
     return {
@@ -535,6 +656,8 @@ export default {
       displayDateInput,
       exportXLS,
       onExportExcel,
+      // onConfirmDelete,
+      // formatYear
     };
   },
 };
@@ -552,6 +675,9 @@ label {
 }
 .table th {
   padding: 1em 1em 1em 1em;
+  //   // padding: 1em 2px 1em 2px;
+  //   // padding: 0.75rem 0.2rem !important;
+  //   // padding-top: 1em !important;
   font-size: 1rem !important;
 }
 
@@ -574,18 +700,10 @@ label {
           </b-col>
         </b-row>
         <b-row>
-          <b-form-group label="เรื่อง/Title" label-for="title" class="col-md-4">
-            <b-form-input
-              id="title"
-              v-model="advancedSearch.title"
-              placeholder="ชื่อเรื่อง..."
-            />
-          </b-form-group>
-
           <b-form-group
             label="หมวดหมู่เอกสาร/Category"
             label-for="category"
-            class="col-md-4"
+            class="col-md-3"
           >
             <v-select
               v-model="advancedSearch.book_out_category_id"
@@ -597,8 +715,39 @@ label {
             />
           </b-form-group>
 
+          <b-form-group
+            label="เลขที่/BookNo"
+            label-for="book_no"
+            class="col-md-3"
+          >
+            <b-form-input
+              id="book_no"
+              v-model="advancedSearch.book_no"
+              placeholder="เลขที่..."
+            />
+          </b-form-group>
+
+          <b-form-group label="เรื่อง/Title" label-for="title" class="col-md-6">
+            <b-form-input
+              id="title"
+              v-model="advancedSearch.title"
+              placeholder="ชื่อเรื่อง..."
+            />
+          </b-form-group>
 
           <b-form-group
+            label="ลงวันที่/Book Date"
+            label-for="book_date"
+            :class="isAdmin || isCEO ? 'col-md-2' : 'col-md-4'"
+          >
+            <flat-pickr
+              v-model="advancedSearch.book_date"
+              placeholder="ลงวันที่"
+              :config="configDate"
+            />
+          </b-form-group>
+
+          <!-- <b-form-group
             label="วันที่รับเอกสาร/Receive Date"
             label-for="receive_date"
             class="col-md-3"
@@ -608,24 +757,27 @@ label {
               placeholder="วันที่รับเอกสาร"
               :config="configDate"
             />
-          </b-form-group>
+          </b-form-group> -->
 
           <b-form-group
-            label="เลขรับ/Book No"
-            label-for="book_no"
-            class="col-md-2"
+            label="สถานะเอกสาร"
+            label-for="status_id"
+            :class="isAdmin || isCEO ? 'col-md-3' : 'col-md-4'"
           >
-            <b-form-input
-              id="book_no"
-              v-model="advancedSearch.book_no"
-              placeholder="เลขรับเอกสาร"
+            <v-select
+              v-model="advancedSearch.status_id"
+              :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
+              label="title"
+              :clearable="true"
+              placeholder="-- All Status --"
+              :options="selectOptions.book_statuses"
             />
           </b-form-group>
 
           <b-form-group
             label="เรียนถึง (ชื่อผู้รับในเอกสาร)"
             label-for="to_send"
-            class="col-md-3"
+            :class="isAdmin || isCEO ? 'col-md-3' : 'col-md-4'"
           >
             <b-form-input
               id="to_send"
@@ -635,17 +787,18 @@ label {
           </b-form-group>
 
           <b-form-group
-            label="ฝ่ายที่เกี่ยวข้อง/Department"
-            label-for="department"
+            label="ผู้รับผิดชอบ"
+            label-for="user_id"
             class="col-md-4"
+            v-if="isAdmin || isCEO"
           >
             <v-select
-              v-model="advancedSearch.department_to"
+              v-model="advancedSearch.user_id"
               :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
               label="title"
               :clearable="true"
-              placeholder="-- All Department --"
-              :options="selectOptions.departments"
+              placeholder="-- All User --"
+              :options="selectOptions.users"
             />
           </b-form-group>
         </b-row>
@@ -685,7 +838,6 @@ label {
 
     <b-card no-body style="box-shadow: 0 4px 24px 0 rgb(34 41 47 / 10%)">
       <b-overlay :show="isOverLay" opacity="0.3" spinner-variant="primary">
-        <!-- Sort -->
         <div class="m-2">
           <b-row>
             <b-col>
@@ -699,12 +851,16 @@ label {
             </b-col>
           </b-row>
         </div>
+        <!-- Sort -->
         <div class="m-2">
           <b-row>
             <b-col>
               <b-button
-                v-if="isAdmin || isStaff"
-                :variant="advancedSearch.book_year_id != null ? 'outline-success' : 'outline-secondary'"
+                :variant="
+                  advancedSearch.book_year_id != null
+                    ? 'outline-success'
+                    : 'outline-secondary'
+                "
                 :disabled="advancedSearch.book_year_id != null ? false : true"
                 @click="
                   $router.push({
@@ -721,8 +877,12 @@ label {
               </b-button>
 
               <b-button
-                v-if="isAdmin || isStaff"
-                :variant="advancedSearch.book_year_id != null ? 'outline-warning' : 'outline-secondary'"
+                v-if="isAdmin"
+                :variant="
+                  advancedSearch.book_year_id != null
+                    ? 'outline-warning'
+                    : 'outline-secondary'
+                "
                 :disabled="advancedSearch.book_year_id != null ? false : true"
                 style="margin-top: 1em"
                 v-b-modal.modal-export
@@ -734,12 +894,12 @@ label {
               </b-button>
 
               <b-button
-                variant="outline-success"
+                variant="outline-info"
                 @click="$router.push({ name: 'book-out-list' })"
                 class="float-right"
                 style="margin-top: 1em"
               >
-                <feather-icon icon="ChevronsLeftIcon" />
+                <feather-icon icon="ArchiveIcon" />
                 <span class="d-none d-xl-inline d-md-inline"
                   >กลับปีปัจจุบัน</span
                 >
@@ -806,11 +966,38 @@ label {
                   }}
                 </template>
                 <template #cell(book_out_category_name)="row">
+                  {{ row.item.book_out_category_name }}
+                </template>
+                <template #cell(book_date)="row">
                   {{
-                    row.item.book_out_category_name == "เอกสารรับภายนอก"
-                      ? "รับภายนอก"
-                      : "รับภายใน"
+                    row.item.book_date
+                      ? dayjs(row.item.book_date)
+                          .locale("th")
+                          .format("DD MMM BB")
+                      : ""
                   }}
+                </template>
+
+                <template #cell(status_name)="row">
+                  <b-badge :variant="row.item.status_color">
+                    {{ row.item.status_name }}
+                  </b-badge>
+                </template>
+
+                <template #cell(book_out_file)="data">
+                  <b-button
+                    variant="outline-primary"
+                    alt="เปิดเอกสาร"
+                    title="เปิดเอกสาร"
+                    class="btn-icon btn-sm"
+                    target="_blank"
+                    :href="data.value"
+                    v-if="data.value != ''"
+                  >
+                    <feather-icon icon="FileIcon" style="margin-bottom: -2px" />
+                    <span class="d-none d-xl-inline">เปิดเอกสาร</span>
+                  </b-button>
+                  <span v-if="data.value == ''">-</span>
                 </template>
 
                 <template #cell(book_out_success_file)="data">
@@ -821,12 +1008,12 @@ label {
                     class="btn-icon btn-sm"
                     target="_blank"
                     :href="data.value"
-                    v-if="data.value != '-'"
+                    v-if="data.value != ''"
                   >
                     <feather-icon icon="FileIcon" style="margin-bottom: -2px" />
                     <span class="d-none d-xl-inline">เปิดเอกสาร</span>
                   </b-button>
-                  <span v-if="data.value == '-'">-</span>
+                  <span v-if="data.value == ''">-</span>
                 </template>
 
                 <template #cell(action)="row">
@@ -852,6 +1039,7 @@ label {
                     alt="แก้ไข"
                     title="แก้ไข"
                     class="btn-icon btn-sm"
+                    v-if="row.item.status_id == 1 || isAdmin"
                     @click="
                       $router.push({
                         name: 'book-out-old-edit',
@@ -907,7 +1095,7 @@ label {
       title="พิมพ์ตารางรับเอกสาร"
     >
       <b-form>
-        <b-form-group>
+        <!-- <b-form-group>
           <label for="start">หมวดหมู่เอกสาร : </label>
           <v-select
             v-model="exportXLS.book_out_category_id"
@@ -917,7 +1105,7 @@ label {
             placeholder="-- All Category --"
             :options="selectOptions.book_out_categories"
           />
-        </b-form-group>
+        </b-form-group> -->
         <b-form-group>
           <label for="start">วันที่เริ่ม : </label>
           <flat-pickr

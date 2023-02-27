@@ -45,9 +45,9 @@ body {
     background-color: #fe7300;
 }
 
-.header-navbar .navbar-container ul.navbar-nav li > a.nav-link {
-    color: #000;
-}
+// .header-navbar .navbar-container ul.navbar-nav li > a.nav-link {
+//     color: #000;
+// }
 
 .horizontal-menu .header-navbar.navbar-horizontal.floating-nav {
     top: 43px !important;
@@ -57,6 +57,10 @@ body {
 
 .header-navbar .navbar-container ul.navbar-nav li > a.nav-link {
     color: #fff;
+}
+
+.header-navbar .navbar-container ul.navbar-nav li > a.nav-link > svg.feather-menu{
+    color: #000;
 }
 
 .horizontal-menu .header-navbar.navbar-horizontal ul#main-menu-navigation > li.active > a {

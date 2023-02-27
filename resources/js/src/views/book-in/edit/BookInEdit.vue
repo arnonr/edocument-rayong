@@ -848,9 +848,9 @@ label {
                   <b-input-group>
                     <b-input-group-prepend>
                       <b-button
-                        variant="outline-warning"
                         target="_blank"
                         :href="item.book_in_file_old"
+                        :variant="item.book_in_file_old != null ? 'outline-warning' :'outline-secondary'"
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>
@@ -881,9 +881,9 @@ label {
                   <b-input-group>
                     <b-input-group-prepend>
                       <b-button
-                        variant="outline-warning"
                         target="_blank"
                         :href="item.book_in_success_file_old"
+                        :variant="item.book_in_success_file_old != null ? 'outline-warning' :'outline-secondary'"
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>

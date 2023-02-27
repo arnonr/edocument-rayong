@@ -133,14 +133,14 @@ Route::group(['prefix' => 'email'], function () {
     Route::get('/person/{id}', [EmailPersonController::class, 'get']);
     Route::get('/person', [EmailPersonController::class, 'getAll']);
     Route::post('/person', [EmailPersonController::class, 'add']);
-    Route::put('/person', [EmailPersonController::class, 'edit']);
+    Route::put('/person/{id}', [EmailPersonController::class, 'edit']);
     Route::delete('/person/{id}', [EmailPersonController::class, 'delete']);
 
     Route::get('/group/{id}', [EmailGroupController::class, 'get']);
     Route::get('/group', [EmailGroupController::class, 'getAll']);
     Route::post('/group', [EmailGroupController::class, 'add']);
-    Route::put('/group', [EmailGroupController::class, 'edit']);
-    Route::delete('/group/{id}', [EmailPersonController::class, 'delete']);
+    Route::put('/group/{id}', [EmailGroupController::class, 'edit']);
+    Route::delete('/group/{id}', [EmailGroupController::class, 'delete']);
 });
 
 Route::group(['prefix' => 'book-year'], function () {

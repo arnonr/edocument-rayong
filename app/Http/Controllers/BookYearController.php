@@ -34,7 +34,7 @@ class BookYearController extends Controller
             $data->where('name','LIKE',"%".$request->name."%");
         }
 
-        if ($request->status == 0) {
+        if (($request->status == 0) && (isset($request->status ))) {
             $data->where('status',$request->status);
         }else if($request->status == 1){
             $data->where('status',$request->status);

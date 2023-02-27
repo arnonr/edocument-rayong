@@ -147,10 +147,11 @@ export default {
 
     const selectOptions = ref({
       book_out_categories: [],
-      book_out_types: [],
-      email_groups: [],
-      emails: [],
+      // book_out_types: [],
+      // email_groups: [],
+      // emails: [],
       book_statuses: [],
+      users: [],
     });
 
     store
@@ -199,6 +200,31 @@ export default {
         });
       });
 
+    store
+      .dispatch("book-out-edit/fetchUsers", {
+        perPage: 100,
+      })
+      .then((response) => {
+        const { data } = response.data;
+        selectOptions.value.users = data.map((d) => {
+          return {
+            code: d.id,
+            title: d.prefix + d.firstname + " " + d.lastname,
+          };
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          component: ToastificationContent,
+          props: {
+            title: "Error fetching User list",
+            icon: "AlertTriangleIcon",
+            variant: "danger",
+          },
+        });
+      });
+
     // store
     //   .dispatch("book-out-edit/fetchDepartments")
     //   .then((response) => {
@@ -226,53 +252,53 @@ export default {
     //     });
     //   });
 
-    store
-      .dispatch("book-out-edit/fetchEmailPersons")
-      .then((response) => {
-        const { data } = response.data;
-        selectOptions.value.emails = data.map((d) => {
-          return {
-            code: d.id,
-            title: d.firstname + " " + d.lastname + " (" + d.email + ")",
-            email: d.email,
-          };
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast({
-          component: ToastificationContent,
-          props: {
-            title: "Error fetching Email's list",
-            icon: "AlertTriangleIcon",
-            variant: "danger",
-          },
-        });
-      });
+    // store
+    //   .dispatch("book-out-edit/fetchEmailPersons")
+    //   .then((response) => {
+    //     const { data } = response.data;
+    //     selectOptions.value.emails = data.map((d) => {
+    //       return {
+    //         code: d.id,
+    //         title: d.firstname + " " + d.lastname + " (" + d.email + ")",
+    //         email: d.email,
+    //       };
+    //     });
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //     toast({
+    //       component: ToastificationContent,
+    //       props: {
+    //         title: "Error fetching Email's list",
+    //         icon: "AlertTriangleIcon",
+    //         variant: "danger",
+    //       },
+    //     });
+    //   });
 
-    store
-      .dispatch("book-out-edit/fetchEmailGroups")
-      .then((response) => {
-        const { data } = response.data;
-        selectOptions.value.email_groups = data.map((d) => {
-          return {
-            code: d.id,
-            title: d.name,
-            email_all: JSON.parse(d.email_all),
-          };
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast({
-          component: ToastificationContent,
-          props: {
-            title: "Error fetching Email Group's list",
-            icon: "AlertTriangleIcon",
-            variant: "danger",
-          },
-        });
-      });
+    // store
+    //   .dispatch("book-out-edit/fetchEmailGroups")
+    //   .then((response) => {
+    //     const { data } = response.data;
+    //     selectOptions.value.email_groups = data.map((d) => {
+    //       return {
+    //         code: d.id,
+    //         title: d.name,
+    //         email_all: JSON.parse(d.email_all),
+    //       };
+    //     });
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //     toast({
+    //       component: ToastificationContent,
+    //       props: {
+    //         title: "Error fetching Email Group's list",
+    //         icon: "AlertTriangleIcon",
+    //         variant: "danger",
+    //       },
+    //     });
+    //   });
 
     store
       .dispatch("book-out-edit/fetchBookOut", {
@@ -291,20 +317,6 @@ export default {
         item.book_date = data.book_date;
         item.book_no = data.book_no;
         item.to_send = data.to_send;
-
-        // if (data.department_id == null) {
-        //   item.department_id = {
-        //     title: "ทุกฝ่าย",
-        //     code: null,
-        //   };
-        // } else {
-        //   item.department_id = {
-        //     title: data.department_name,
-        //     code: data.department_id,
-        //   };
-        // }
-
-        // item.book_to = JSON.parse(data.book_to);
 
         item.book_out_file_old = null;
         if (data.book_out_file != null) {
@@ -350,21 +362,6 @@ export default {
 
     const onSubmit = (ctx, callback) => {
       overLay.value = true;
-
-      // let book_to = null;
-      // if (item.book_to) {
-      //   book_to = item.book_to.map((x) => {
-      //     if (!x.hasOwnProperty("email")) {
-      //       x.email = x.title;
-      //       x.code = null;
-      //     }
-      //     return {
-      //       title: x.title,
-      //       code: x.code,
-      //       email: x.email,
-      //     };
-      //   });
-      // }
 
       let dataSend = {
         id: item.id,
@@ -421,43 +418,6 @@ export default {
         });
     };
 
-    // watch(
-    //   () => item.email_group,
-    //   (newData) => {
-    //     if (newData != null) {
-    //       // Find Email
-    //       let book_to_with_group = selectOptions.value.emails.filter((x) => {
-    //         let email_arr = item.email_group.email_all.map((e) => {
-    //           return e.code;
-    //         });
-    //         let findEmail = email_arr.includes(x.code);
-    //         return findEmail;
-    //       });
-
-    //       // Find Duplicate
-    //       let book_to_with_group_filter = null;
-    //       if (item.book_to) {
-    //         book_to_with_group_filter = book_to_with_group.filter((x) => {
-    //           let check = item.book_to.find((e) => {
-    //             return x.code === e.code;
-    //           });
-
-    //           return check ? false : true;
-    //         });
-    //       } else {
-    //         book_to_with_group_filter = book_to_with_group;
-    //       }
-
-    //       if (item.book_to == null) {
-    //         item.book_to = [];
-    //       }
-    //       item.book_to = [...item.book_to, ...book_to_with_group_filter];
-
-    //       console.log(item.book_to)
-    //     }
-    //   }
-    // );
-
     watch(
       () => item.book_out_category_id,
       (newValue, oldValue) => {
@@ -490,6 +450,15 @@ export default {
 }
 label {
   font-size: 1rem;
+}
+
+.div-spinner {
+  bottom: 10em;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
 }
 </style>
 
@@ -650,7 +619,8 @@ label {
                     v-model="item.user_id"
                     :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
                     placeholder="-- เลือกผู้รับผิดชอบ --"
-                    disabled
+                    :options="selectOptions.users"
+                    :disabled="isAdmin ? false : true"
                     :clearable="false"
                   />
                   <small class="text-danger">{{ errors[0] }}</small>
@@ -682,13 +652,16 @@ label {
                 label-for="book_out_file"
                 label-cols-md="4"
               >
-                <validation-provider name="book_out_file" #default="{ errors }">
+                <validation-provider
+                  name="book_out_file"
+                  #default="{ errors }"
+                >
                   <b-input-group>
                     <b-input-group-prepend>
                       <b-button
-                        variant="outline-warning"
                         target="_blank"
                         :href="item.book_out_file_old"
+                        :variant="item.book_out_file_old != null ? 'outline-warning' :'outline-secondary'"
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>
@@ -719,9 +692,10 @@ label {
                   <b-input-group>
                     <b-input-group-prepend>
                       <b-button
-                        variant="outline-warning"
+                        :variant="item.book_out_success_file_old != null ? 'outline-warning' :'outline-secondary'"
                         target="_blank"
                         :href="item.book_out_success_file_old"
+                       
                       >
                         <feather-icon icon="FileTextIcon" /> ดูไฟล์เดิม
                       </b-button>
@@ -762,6 +736,7 @@ label {
                 label="ต้องการส่งเมลใช่หรือไม่?"
                 label-for="h-detail"
                 label-cols-md="4"
+                v-if="isAdmin"
               >
                 <b-form-checkbox
                   v-model="item.is_send_email"
@@ -788,17 +763,7 @@ label {
       </validation-observer>
       <template #overlay>
         <div>
-          <div
-            class="position-absolute"
-            style="
-              bottom: 10em;
-              margin-left: auto;
-              margin-right: auto;
-              left: 0;
-              right: 0;
-              text-align: center;
-            "
-          >
+          <div class="position-absolute div-spinner">
             <b-spinner type="border" variant="primary"></b-spinner>
             <br />
             <span>Please wait...</span>

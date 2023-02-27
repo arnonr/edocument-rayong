@@ -2,60 +2,66 @@ import axios from "@axios";
 
 export default {
   namespaced: true,
+  state: {
+    year: {
+      id: 1,
+      name: "2566",
+    },
+  },
   getters: {},
+  mutations: {
+    SET_YEAR(state, val) {
+      state.year = val;
+    },
+  },
   actions: {
-    fetchUsers(ctx, queryParams) {
+    fetchBookYears(ctx, queryParams) {
       return new Promise((resolve, reject) => {
         axios
-          .get("/user", { params: queryParams })
+          .get(`/book-year`, { params: queryParams })
           .then((response) => resolve(response))
           .catch((error) => reject(error));
       });
     },
-    fetchUser(ctx, { id }) {
+    
+    fetchBookIns(ctx, queryParams) {
       return new Promise((resolve, reject) => {
         axios
-          .get(`/user/${id}`)
+          .get(`/book-in/`, { params: queryParams })
           .then((response) => resolve(response))
           .catch((error) => reject(error));
       });
     },
-    addUser(ctx, dataSend) {
+    // 
+    
+    fetchBookInCategories(ctx, queryParams) {
       return new Promise((resolve, reject) => {
         axios
-          .post("/user", dataSend)
-          .then((response) => {
-            return resolve(response);
-          })
+          .get(`/book-in-category`, { params: queryParams })
+          .then((response) => resolve(response))
           .catch((error) => reject(error));
       });
     },
-
-    editUser(ctx, dataSend) {
+    fetchBookOuts(ctx, queryParams) {
       return new Promise((resolve, reject) => {
         axios
-          .put(`/user/${dataSend.id}`, dataSend)
-          .then((response) => {
-            return resolve(response);
-          })
+          .get(`/book-out/`, { params: queryParams })
+          .then((response) => resolve(response))
           .catch((error) => reject(error));
       });
     },
-
-    deleteUser(ctx, { id }) {
+    fetchBookOutCategories(ctx, queryParams) {
       return new Promise((resolve, reject) => {
         axios
-          .delete(`/user/${id}`)
-          .then((response) => {
-            return resolve(response);
-          })
+          .get(`/book-out-category`, { params: queryParams })
+          .then((response) => resolve(response))
           .catch((error) => reject(error));
       });
     },
-    fetchDepartments(ctx, queryParams) {
+    fetchBookInTypes(ctx, queryParams) {
       return new Promise((resolve, reject) => {
         axios
-          .get(`/department`, { params: queryParams })
+          .get(`/book-in-type`, { params: queryParams })
           .then((response) => resolve(response))
           .catch((error) => reject(error));
       });

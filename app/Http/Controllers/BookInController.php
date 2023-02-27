@@ -447,7 +447,7 @@ class BookInController extends Controller
         $data->created_by = 'arnonr';
         $data->save();
 
-        if(($request->is_send_email == true) && ($request->is_send_email != 'undefined')){
+        if(($request->is_send_email == 'true') && ($request->is_send_email != 'undefined')){
             if($request->book_to != 'null'){
                 foreach(json_decode($request->book_to, true) as $key => $value){
                     $this->sendMail($value['email'], $data);

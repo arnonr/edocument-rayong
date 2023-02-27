@@ -25,7 +25,6 @@ import { Thai } from "flatpickr/dist/l10n/th.js";
 
 import dayjs from "dayjs";
 import "dayjs/locale/th";
-import isBetween from "dayjs/plugin/isBetween";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 
@@ -34,7 +33,6 @@ import * as XLSX from "xlsx/xlsx";
 
 import {
   ref,
-  watch,
   watchEffect,
   reactive,
   onUnmounted,
@@ -289,22 +287,22 @@ export default {
         { title: "น้อย -> มาก", code: "asc" },
         { title: "มาก -> น้อย", code: "desc" },
       ],
-      years: [],
+      book_years: [],
       users: [],
-      book_statuses: []
+      book_statuses: [],
     });
 
-    const yearSelect = dayjs().locale("th").format("BBBB");
-    selectOptions.value.years.push({
-      title: String(yearSelect),
-      code: String(yearSelect),
-    });
-    for (let i = 1; i <= 9; i++) {
-      selectOptions.value.years.push({
-        title: String(parseInt(yearSelect) - i),
-        code: String(parseInt(yearSelect) - i),
-      });
-    }
+    // const yearSelect = dayjs().locale("th").format("BBBB");
+    // selectOptions.value.years.push({
+    //   title: String(yearSelect),
+    //   code: String(yearSelect),
+    // });
+    // for (let i = 1; i <= 9; i++) {
+    //   selectOptions.value.years.push({
+    //     title: String(parseInt(yearSelect) - i),
+    //     code: String(parseInt(yearSelect) - i),
+    //   });
+    // }
 
     store
       .dispatch("book-out/fetchBookOutCategories")
@@ -428,6 +426,10 @@ export default {
         }
       }
 
+      if (isStaff) {
+        search.user_id = getUserData().userID;
+      }
+
       // if (search.is_publish) {
       //   if (search.is_publish.hasOwnProperty("code")) {
       //     search.is_publish = search.is_publish.code;
@@ -465,27 +467,6 @@ export default {
     };
     fetchItems();
 
-    // watch(
-    //   () => advancedSearch.type,
-    //   (value) => {
-    //     if (value) {
-    //       if (value.code == 1) {
-    //         advancedSearch.country_code = { title: "ไทย", code: "THA" };
-    //       } else {
-    //         advancedSearch.country_code = {
-    //           title: "-- All Country --",
-    //           code: null,
-    //         };
-    //       }
-    //     } else {
-    //       advancedSearch.country_code = {
-    //         title: "-- All Country --",
-    //         code: null,
-    //       };
-    //     }
-    //   }
-    // );
-
     watchEffect(() => {
       fetchItems();
     });
@@ -495,15 +476,23 @@ export default {
     };
 
     const displayDateInput = (date) => {
-      return date ? dayjs(date).locale("th").format("DD/MM/BBBB") : date;
+      return date ? dayjs(date).locale("th").format("DD/MMM/BBBB") : date;
     };
 
     const onExportExcel = async () => {
+
+      if (
+        exportXLS.end_date == "" ||
+        exportXLS.start_date == ""
+      ) {
+        errorToast("โปรดระบุข้อมูลให้ครบถ้วน");
+        return;
+      }
+
       await store
         .dispatch("book-out/fetchBookOuts", {
           start_receive_date: exportXLS.start_date,
           end_receive_date: exportXLS.end_date,
-          book_out_category_id: exportXLS.book_out_category_id.code,
         })
         .then((response) => {
           let exportExcels = response.data.data.map((x) => {
@@ -708,7 +697,7 @@ label {
           <b-form-group
             label="ลงวันที่/Book Date"
             label-for="book_date"
-            class="col-md-2"
+            :class="isAdmin || isCEO ? 'col-md-2' : 'col-md-4'"
           >
             <flat-pickr
               v-model="advancedSearch.book_date"
@@ -732,7 +721,7 @@ label {
           <b-form-group
             label="สถานะเอกสาร"
             label-for="status_id"
-            class="col-md-3"
+            :class="isAdmin || isCEO ? 'col-md-3' : 'col-md-4'"
           >
             <v-select
               v-model="advancedSearch.status_id"
@@ -747,7 +736,7 @@ label {
           <b-form-group
             label="เรียนถึง (ชื่อผู้รับในเอกสาร)"
             label-for="to_send"
-            class="col-md-3"
+            :class="isAdmin || isCEO ? 'col-md-3' : 'col-md-4'"
           >
             <b-form-input
               id="to_send"
@@ -760,6 +749,7 @@ label {
             label="ผู้รับผิดชอบ"
             label-for="user_id"
             class="col-md-4"
+            v-if="isAdmin || isCEO"
           >
             <v-select
               v-model="advancedSearch.user_id"
@@ -789,7 +779,7 @@ label {
           <b-row>
             <b-col>
               <b-button
-                v-if="isAdmin || isStaff"
+                v-if="isAdmin || isStaff || isCEO"
                 variant="outline-success"
                 @click="$router.push({ name: 'book-out-add' })"
                 style="margin-top: 1em"
@@ -799,7 +789,7 @@ label {
               </b-button>
 
               <b-button
-                v-if="isAdmin || isStaff"
+                v-if="isAdmin"
                 variant="outline-warning"
                 style="margin-top: 1em"
                 v-b-modal.modal-export
@@ -951,6 +941,7 @@ label {
                     alt="แก้ไข"
                     title="แก้ไข"
                     class="btn-icon btn-sm"
+                    v-if="row.item.status_id == 1 || isAdmin"
                     @click="
                       $router.push({
                         name: 'book-out-edit',
@@ -1003,7 +994,7 @@ label {
       title="พิมพ์ตารางรับเอกสาร"
     >
       <b-form>
-        <b-form-group>
+        <!-- <b-form-group>
           <label for="start">หมวดหมู่เอกสาร : </label>
           <v-select
             v-model="exportXLS.book_out_category_id"
@@ -1013,7 +1004,7 @@ label {
             placeholder="-- All Category --"
             :options="selectOptions.book_out_categories"
           />
-        </b-form-group>
+        </b-form-group> -->
         <b-form-group>
           <label for="start">วันที่เริ่ม : </label>
           <flat-pickr

@@ -15,7 +15,6 @@ import {
   BOverlay,
   BSpinner,
   BInputGroupPrepend,
-  BFormCheckbox,
 } from "bootstrap-vue";
 import vSelect from "vue-select";
 import { ValidationProvider, ValidationObserver, validate } from "vee-validate";
@@ -57,7 +56,6 @@ export default {
     BInputGroup,
     BInputGroupPrepend,
     BInputGroupText,
-    BFormCheckbox,
   },
   data() {
     return {
@@ -145,9 +143,9 @@ export default {
 
     const selectOptions = ref({
       book_out_categories: [],
-      departments: [],
-      email_groups: [],
-      emails: [],
+      // departments: [],
+      // email_groups: [],
+      // emails: [],
       book_statuses: [],
       users: [],
     });
@@ -199,13 +197,15 @@ export default {
       });
 
     store
-      .dispatch("book-out-add/fetchUsers")
+      .dispatch("book-out-add/fetchUsers", {
+        perPage: 100,
+      })
       .then((response) => {
         const { data } = response.data;
         selectOptions.value.users = data.map((d) => {
           return {
             code: d.id,
-            title: d.prefix+d.firstname+" "+d.lastname,
+            title: d.prefix + d.firstname + " " + d.lastname,
           };
         });
       })
@@ -248,53 +248,53 @@ export default {
     //     });
     //   });
 
-    store
-      .dispatch("book-out-add/fetchEmailPersons")
-      .then((response) => {
-        const { data } = response.data;
-        selectOptions.value.emails = data.map((d) => {
-          return {
-            code: d.id,
-            title: d.firstname + " " + d.lastname + " (" + d.email + ")",
-            email: d.email,
-          };
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast({
-          component: ToastificationContent,
-          props: {
-            title: "Error fetching Email's list",
-            icon: "AlertTriangleIcon",
-            variant: "danger",
-          },
-        });
-      });
+    // store
+    //   .dispatch("book-out-add/fetchEmailPersons")
+    //   .then((response) => {
+    //     const { data } = response.data;
+    //     selectOptions.value.emails = data.map((d) => {
+    //       return {
+    //         code: d.id,
+    //         title: d.firstname + " " + d.lastname + " (" + d.email + ")",
+    //         email: d.email,
+    //       };
+    //     });
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //     toast({
+    //       component: ToastificationContent,
+    //       props: {
+    //         title: "Error fetching Email's list",
+    //         icon: "AlertTriangleIcon",
+    //         variant: "danger",
+    //       },
+    //     });
+    //   });
 
-    store
-      .dispatch("book-out-add/fetchEmailGroups")
-      .then((response) => {
-        const { data } = response.data;
-        selectOptions.value.email_groups = data.map((d) => {
-          return {
-            code: d.id,
-            title: d.name,
-            email_all: JSON.parse(d.email_all),
-          };
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast({
-          component: ToastificationContent,
-          props: {
-            title: "Error fetching Email Group's list",
-            icon: "AlertTriangleIcon",
-            variant: "danger",
-          },
-        });
-      });
+    // store
+    //   .dispatch("book-out-add/fetchEmailGroups")
+    //   .then((response) => {
+    //     const { data } = response.data;
+    //     selectOptions.value.email_groups = data.map((d) => {
+    //       return {
+    //         code: d.id,
+    //         title: d.name,
+    //         email_all: JSON.parse(d.email_all),
+    //       };
+    //     });
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //     toast({
+    //       component: ToastificationContent,
+    //       props: {
+    //         title: "Error fetching Email Group's list",
+    //         icon: "AlertTriangleIcon",
+    //         variant: "danger",
+    //       },
+    //     });
+    //   });
 
     const validationForm = () => {
       simpleRules.value.validate().then((success) => {
@@ -336,9 +336,7 @@ export default {
         status_id: item.status_id.code,
         user_id: item.user_id.code,
         is_publish: item.is_publish.code,
-        // department_id: item.department_id.code,
         book_to: item.book_to,
-        // book_year_id: item.book_year_id.code,
       };
 
       store
@@ -384,40 +382,6 @@ export default {
       }
     );
 
-    // watch(
-    //   () => item.email_group,
-    //   (newData) => {
-    //     if (newData != null) {
-    //       // Find Email
-    //       let book_to_with_group = selectOptions.value.emails.filter((x) => {
-    //         let email_arr = item.email_group.email_all.map((e) => {
-    //           return e.code;
-    //         });
-    //         let findEmail = email_arr.includes(x.code);
-    //         return findEmail;
-    //       });
-
-    //       // Find Duplicate
-    //       let book_to_with_group_filter = null;
-    //       if (item.book_to) {
-    //         book_to_with_group_filter = book_to_with_group.filter((x) => {
-    //           let check = item.book_to.find((e) => {
-    //             return x.code === e.code;
-    //           });
-
-    //           return check ? false : true;
-    //         });
-    //       } else {
-    //         book_to_with_group_filter = book_to_with_group;
-    //       }
-
-    //       if (item.book_to == null) {
-    //         item.book_to = [];
-    //       }
-    //       item.book_to = [...item.book_to, ...book_to_with_group_filter];
-    //     }
-    //   }
-    // );
 
     return {
       item,
@@ -443,6 +407,15 @@ export default {
 }
 label {
   font-size: 1rem;
+}
+
+.div-spinner {
+  bottom: 10em;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
 }
 </style>
 
@@ -638,7 +611,11 @@ label {
                 label-for="book_out_file"
                 label-cols-md="4"
               >
-                <validation-provider name="book_out_file" #default="{ errors }">
+                <validation-provider
+                  name="book_out_file"
+                  #default="{ errors }"
+                  rules="required"
+                >
                   <b-form-file
                     id="book_out_file"
                     v-model="item.book_out_file"
@@ -708,15 +685,7 @@ label {
       <template #overlay>
         <div>
           <div
-            class="position-absolute"
-            style="
-              bottom: 10em;
-              margin-left: auto;
-              margin-right: auto;
-              left: 0;
-              right: 0;
-              text-align: center;
-            "
+            class="position-absolute div-spinner"
           >
             <b-spinner type="border" variant="primary"></b-spinner>
             <br />
