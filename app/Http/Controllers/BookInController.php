@@ -233,7 +233,7 @@ class BookInController extends Controller
             'department_to' => 'nullable',
             'book_to' => 'nullable|string',
             'book_reference' => 'nullable|string',
-            'remark' => 'string',
+            'remark' => 'nullable|string',
             'status_id' => 'nullable|integer',
             'is_publish' => 'nullable|integer',
         ]);
@@ -354,7 +354,7 @@ class BookInController extends Controller
             'department_to' => 'nullable',
             'book_to' => 'nullable|string',
             'book_reference' => 'nullable|string',
-            'remark' => 'string',
+            'remark' => 'nullable|string',
             'status_id' => 'nullable|integer',
             'is_publish' => 'nullable|integer',
         ]);
