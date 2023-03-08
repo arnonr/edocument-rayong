@@ -176,7 +176,7 @@ class AuthController extends Controller
             'password' => $password,  // <----- Password for authen
         ];
 
-        $api_url = 'https://api.account.kmutnb.ac.th/api/account-api/user-authen'; // <----- API URL
+        $api_url = 'http://api.account.kmutnb.ac.th/api/account-api/user-authen'; // <----- API URL
 
         $response = Http::timeout(50)->withToken($access_token)->post($api_url, $data);
 
