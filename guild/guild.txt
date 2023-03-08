@@ -4,7 +4,7 @@ php artisan sail:install
 
 npm i --legacy-peer-deps
 
-export NODE_OPTIONS=--openssl-legacy-provider
+export NODE_OPTIONS=--openssl-legacy-provider 
 
 git rm -r --cached .
 
