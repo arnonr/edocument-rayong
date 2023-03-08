@@ -14,7 +14,7 @@ const whitelist = ['127.0.0.1', "::1","localhost:8105"];
 
 class ActivityController extends Controller
 {
-    protected $uploadUrl = "http://143.198.208.110:8105/storage/";
+    protected $uploadUrl = "http://110.164.166.140/storage/";
     public function getAll(Request $request)
     {
         if(in_array($_SERVER['HTTP_HOST'], whitelist)){
