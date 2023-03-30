@@ -14,3 +14,14 @@ rm -rf public/storage
 php artisan storage:link
 sudo chmod -R o+rw bootstrap/cache
 sudo chmod -R o+rw storage
+
+
+
+mix.webpackConfig({
+  output: {
+    publicPath: 'http://edoc.rayong.kmutnb.ac.th/',
+    chunkFilename: 'js/chunks/[name].[chunkhash].js',
+  },
+})
+
+mix.setResourceRoot('http://edoc.rayong.kmutnb.ac.th/')
