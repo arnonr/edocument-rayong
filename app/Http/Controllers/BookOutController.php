@@ -313,17 +313,19 @@ class BookOutController extends Controller
         $data->created_by = 'arnonr';
         $data->save();
 
-        // if($request->book_to != 'null'){
-        //     foreach(json_decode($request->book_to, true) as $key => $value){
-        //         $this->sendMail($value['email'], $data);
-        //     }
-        // }
-
         if(($path_success_file != null) && ($data->status_id == 4)){
-            $user = User::where('id',$data->user_id)->first();
-            // email
-            $this->sendMail($user->email, $data);
+            if($request->book_to != 'null'){
+                foreach(json_decode($request->book_to, true) as $key => $value){
+                    $this->sendMail($value['email'], $data);
+                }
+            }
         }
+
+        // if(($path_success_file != null) && ($data->status_id == 4)){
+        //     $user = User::where('id',$data->user_id)->first();
+        //     // email
+        //     $this->sendMail($user->email, $data);
+        // }
 
         $responseData = [
             'message' => 'success',
@@ -443,16 +445,26 @@ class BookOutController extends Controller
         $data->created_by = 'arnonr';
         $data->save();
 
-        if(($path_success_file != null) && ($data->status_id == 4)){
+        // if(($path_success_file != null) && ($data->status_id == 4)){
         
-            if($request->is_send_email == "true"){
+        //     if($request->is_send_email == "true"){
                 
-                $user = User::where('id', $data->user_id)->first();
-                // email
-                $this->sendMail($user->email, $data);
+        //         $user = User::where('id', $data->user_id)->first();
+        //         // email
+        //         $this->sendMail($user->email, $data);
                 
-            }   
-        }
+        //     }   
+        // }
+
+        if(($request->is_send_email == 'true') && ($request->is_send_email != 'undefined')){
+            if(($path_success_file != null) && ($data->status_id == 4)){
+                if($request->book_to != 'null'){
+                    foreach(json_decode($request->book_to, true) as $key => $value){
+                        $this->sendMail($value['email'], $data);
+                    }
+                }
+            }
+        }   
             
 
         $responseData = [
@@ -590,7 +602,6 @@ class BookOutController extends Controller
             'title' => $data->title,
             'body' => 'เอกสารของท่านได้รับการอนุมัติเรียบร้อยแล้ว<br>
             เรื่อง : '.$data->title.'<br>
-            จาก : '.$data->book_from.'<br>
             วันที่รับ : '.$date_receive.'<br>
             ไฟล์ฉบับสมบูรณ์: <a href="'.$this->uploadUrl.$data->book_out_success_file.'">เปิดไฟล์</a>'
         ];

@@ -412,15 +412,21 @@ export default {
     const fetchItems = () => {
       let search = { ...advancedSearch };
 
-      if (isStaff) {
-        search.book_in_category_id = 1;
-        search.department_to = getUserData().department.id;
-        search.department_to_null = true;
-      } else if (search.book_in_category_id) {
+      // if (isStaff) {
+      //   search.book_in_category_id = 1;
+      //   search.department_to = getUserData().department.id;
+      //   search.department_to_null = true;
+      // } else if (search.book_in_category_id) {
+      //   if (search.book_in_category_id.hasOwnProperty("code")) {
+      //     search.book_in_category_id = search.book_in_category_id.code;
+      //   }
+      //   search.department_to_null = false;
+      // }
+
+      if (search.book_in_category_id) {
         if (search.book_in_category_id.hasOwnProperty("code")) {
           search.book_in_category_id = search.book_in_category_id.code;
         }
-        search.department_to_null = false;
       }
 
       if (search.book_in_type_id) {
@@ -683,7 +689,11 @@ label {
           </b-col>
         </b-row>
         <b-row>
-          <b-form-group label="เรื่อง/Title" label-for="title" :class="isStaff ? 'col-md-6' : 'col-md-4'">
+          <b-form-group
+            label="เรื่อง/Title"
+            label-for="title"
+            :class="isStaff ? 'col-md-6' : 'col-md-4'"
+          >
             <b-form-input
               id="title"
               v-model="advancedSearch.title"

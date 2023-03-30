@@ -153,6 +153,8 @@ export default {
       // emails: [],
       book_statuses: [],
       users: [],
+      email_groups: [],
+      emails: [],
     });
 
     store
@@ -227,6 +229,54 @@ export default {
       });
 
     store
+      .dispatch("book-out-old-edit/fetchEmailPersons")
+      .then((response) => {
+        const { data } = response.data;
+        selectOptions.value.emails = data.map((d) => {
+          return {
+            code: d.id,
+            title: d.firstname + " " + d.lastname + " (" + d.email + ")",
+            email: d.email,
+          };
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          component: ToastificationContent,
+          props: {
+            title: "Error fetching Email's list",
+            icon: "AlertTriangleIcon",
+            variant: "danger",
+          },
+        });
+      });
+
+    store
+      .dispatch("book-out-old-edit/fetchEmailGroups")
+      .then((response) => {
+        const { data } = response.data;
+        selectOptions.value.email_groups = data.map((d) => {
+          return {
+            code: d.id,
+            title: d.name,
+            email_all: JSON.parse(d.email_all),
+          };
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          component: ToastificationContent,
+          props: {
+            title: "Error fetching Email Group's list",
+            icon: "AlertTriangleIcon",
+            variant: "danger",
+          },
+        });
+      });
+
+    store
       .dispatch("book-out-old-edit/fetchBookOut", {
         id: router.currentRoute.params.id,
       })
@@ -243,6 +293,8 @@ export default {
         item.book_date = data.book_date;
         item.book_no = data.book_no;
         item.to_send = data.to_send;
+
+        item.book_to = JSON.parse(data.book_to);
 
         item.book_out_file_old = null;
         if (data.book_out_file != null) {
@@ -289,6 +341,21 @@ export default {
     const onSubmit = (ctx, callback) => {
       overLay.value = true;
 
+      let book_to = null;
+      if (item.book_to) {
+        book_to = item.book_to.map((x) => {
+          if (!x.hasOwnProperty("email")) {
+            x.email = x.title;
+            x.code = null;
+          }
+          return {
+            title: x.title,
+            code: x.code,
+            email: x.email,
+          };
+        });
+      }
+
       let dataSend = {
         id: item.id,
         title: item.title,
@@ -304,7 +371,7 @@ export default {
         status_id: item.status_id.code,
         user_id: item.user_id.code,
         is_publish: item.is_publish.code,
-        book_to: item.book_to,
+        book_to: book_to,
         // book_year_id: item.book_year_id.code,
         is_send_email: item.is_send_email,
       };
@@ -350,6 +417,43 @@ export default {
       (newValue, oldValue) => {
         fetchBookCode(newValue.code);
         //
+      }
+    );
+
+    watch(
+      () => item.email_group,
+      (newData) => {
+        if (newData != null) {
+          // Find Email
+          let book_to_with_group = selectOptions.value.emails.filter((x) => {
+            let email_arr = item.email_group.email_all.map((e) => {
+              return e.code;
+            });
+            let findEmail = email_arr.includes(x.code);
+            return findEmail;
+          });
+
+          // Find Duplicate
+          let book_to_with_group_filter = null;
+          if (item.book_to) {
+            book_to_with_group_filter = book_to_with_group.filter((x) => {
+              let check = item.book_to.find((e) => {
+                return x.code === e.code;
+              });
+
+              return check ? false : true;
+            });
+          } else {
+            book_to_with_group_filter = book_to_with_group;
+          }
+
+          if (item.book_to == null) {
+            item.book_to = [];
+          }
+          item.book_to = [...item.book_to, ...book_to_with_group_filter];
+
+          console.log(item.book_to);
+        }
       }
     );
 
@@ -552,6 +656,50 @@ label {
                   />
                   <small class="text-danger">{{ errors[0] }}</small>
                 </validation-provider>
+              </b-form-group>
+            </b-col>
+
+            <b-col cols="12" v-if="isAdmin">
+              <b-form-group
+                label="ผู้ที่เกี่ยวข้อง (ส่งเมล)"
+                label-for="book_to"
+                label-cols-md="4"
+              >
+                <b-row>
+                  <b-col cols="12">
+                    <validation-provider name="Book To" #default="{ errors }">
+                      <v-select
+                        v-model="item.book_to"
+                        :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
+                        label="title"
+                        multiple
+                        taggable
+                        :options="selectOptions.emails"
+                        placeholder="-- เลือกผู้ที่เกี่ยวข้อง (ได้มากกว่า 1) --"
+                      />
+                      <small class="text-danger">{{ errors[0] }}</small>
+                    </validation-provider>
+                  </b-col>
+                  <b-col cols="2" class="mt-2">
+                    <b-button
+                      type="button"
+                      variant="danger"
+                      @click.prevent="item.book_to = ''"
+                      class="mr-1"
+                    >
+                      Clear
+                    </b-button>
+                  </b-col>
+                  <b-col cols="10" class="mt-2">
+                    <v-select
+                      v-model="item.email_group"
+                      :dir="$store.state.appConfig.isRTL ? 'rtl' : 'ltr'"
+                      label="title"
+                      :options="selectOptions.email_groups"
+                      placeholder="-- เลือกจากกลุ่ม --"
+                    />
+                  </b-col>
+                </b-row>
               </b-form-group>
             </b-col>
 
