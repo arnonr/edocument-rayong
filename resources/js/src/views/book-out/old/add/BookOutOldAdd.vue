@@ -206,7 +206,7 @@ export default {
         selectOptions.value.users = data.map((d) => {
           return {
             code: d.id,
-            title: d.prefix + d.firstname + " " + d.lastname,
+            title: d.firstname + " " + d.lastname,
           };
         });
       })
