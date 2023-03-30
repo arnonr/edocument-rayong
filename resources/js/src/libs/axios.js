@@ -3,7 +3,7 @@ import Vue from 'vue'
 // axios
 import axios from 'axios'
 
-let baseUrl = "http://110.164.166.140/api";
+let baseUrl = "http://edoc.rayong.kmutnb.ac.th/api";
 if (location.hostname === "localhost" || location.hostname === "127.0.0.1"){
   baseUrl = "http://localhost:8109/api/";
 }
