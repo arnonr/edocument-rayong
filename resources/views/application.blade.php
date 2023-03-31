@@ -26,8 +26,7 @@
 
 <body>
   <noscript>
-    <strong>We're sorry but Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template doesn't work properly without
-      JavaScript enabled. Please enable it to continue.</strong>
+    <strong>We're sorry Edocument</strong>
   </noscript>
   <div id="loading-bg">
     <div class="loading-logo">

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
-const whitelist = ['127.0.0.1', "::1","localhost:8109"];
+const whitelist = ['127.0.0.1', "::1","localhost"];
 
 class BookInController extends Controller
 {
@@ -20,7 +20,7 @@ class BookInController extends Controller
     public function getAll(Request $request)
     {
         if(in_array($_SERVER['HTTP_HOST'], whitelist)){
-            $this->uploadUrl = 'http://localhost:8109/storage';
+            $this->uploadUrl = 'http://localhost/storage';
         }
 
         $items = BookIn::select(
@@ -164,7 +164,7 @@ class BookInController extends Controller
     public function get($id)
     {
         if(in_array($_SERVER['HTTP_HOST'], whitelist)){
-            $this->uploadUrl = 'http://localhost:8109/storage';
+            $this->uploadUrl = 'http://localhost/storage';
         }
         // User DB
         
